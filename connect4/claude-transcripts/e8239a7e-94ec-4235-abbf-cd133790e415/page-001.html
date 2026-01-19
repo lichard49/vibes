@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code transcript - page 1</title>
+    <style>
+:root { --bg-color: #f5f5f5; --card-bg: #ffffff; --user-bg: #e3f2fd; --user-border: #1976d2; --assistant-bg: #f5f5f5; --assistant-border: #9e9e9e; --thinking-bg: #fff8e1; --thinking-border: #ffc107; --thinking-text: #666; --tool-bg: #f3e5f5; --tool-border: #9c27b0; --tool-result-bg: #e8f5e9; --tool-error-bg: #ffebee; --text-color: #212121; --text-muted: #757575; --code-bg: #263238; --code-text: #aed581; }
+* { box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg-color); color: var(--text-color); margin: 0; padding: 16px; line-height: 1.6; }
+.container { max-width: 800px; margin: 0 auto; }
+h1 { font-size: 1.5rem; margin-bottom: 24px; padding-bottom: 8px; border-bottom: 2px solid var(--user-border); }
+.header-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 2px solid var(--user-border); padding-bottom: 8px; margin-bottom: 24px; }
+.header-row h1 { border-bottom: none; padding-bottom: 0; margin-bottom: 0; flex: 1; min-width: 200px; }
+.message { margin-bottom: 16px; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.message.user { background: var(--user-bg); border-left: 4px solid var(--user-border); }
+.message.assistant { background: var(--card-bg); border-left: 4px solid var(--assistant-border); }
+.message.tool-reply { background: #fff8e1; border-left: 4px solid #ff9800; }
+.tool-reply .role-label { color: #e65100; }
+.tool-reply .tool-result { background: transparent; padding: 0; margin: 0; }
+.tool-reply .tool-result .truncatable.truncated::after { background: linear-gradient(to bottom, transparent, #fff8e1); }
+.message-header { display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; background: rgba(0,0,0,0.03); font-size: 0.85rem; }
+.role-label { font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.user .role-label { color: var(--user-border); }
+time { color: var(--text-muted); font-size: 0.8rem; }
+.timestamp-link { color: inherit; text-decoration: none; }
+.timestamp-link:hover { text-decoration: underline; }
+.message:target { animation: highlight 2s ease-out; }
+@keyframes highlight { 0% { background-color: rgba(25, 118, 210, 0.2); } 100% { background-color: transparent; } }
+.message-content { padding: 16px; }
+.message-content p { margin: 0 0 12px 0; }
+.message-content p:last-child { margin-bottom: 0; }
+.thinking { background: var(--thinking-bg); border: 1px solid var(--thinking-border); border-radius: 8px; padding: 12px; margin: 12px 0; font-size: 0.9rem; color: var(--thinking-text); }
+.thinking-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #f57c00; margin-bottom: 8px; }
+.thinking p { margin: 8px 0; }
+.assistant-text { margin: 8px 0; }
+.tool-use { background: var(--tool-bg); border: 1px solid var(--tool-border); border-radius: 8px; padding: 12px; margin: 12px 0; }
+.tool-header { font-weight: 600; color: var(--tool-border); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.tool-icon { font-size: 1.1rem; }
+.tool-description { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 8px; font-style: italic; }
+.tool-result { background: var(--tool-result-bg); border-radius: 8px; padding: 12px; margin: 12px 0; }
+.tool-result.tool-error { background: var(--tool-error-bg); }
+.file-tool { border-radius: 8px; padding: 12px; margin: 12px 0; }
+.write-tool { background: linear-gradient(135deg, #e3f2fd 0%, #e8f5e9 100%); border: 1px solid #4caf50; }
+.edit-tool { background: linear-gradient(135deg, #fff3e0 0%, #fce4ec 100%); border: 1px solid #ff9800; }
+.file-tool-header { font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; font-size: 0.95rem; }
+.write-header { color: #2e7d32; }
+.edit-header { color: #e65100; }
+.file-tool-icon { font-size: 1rem; }
+.file-tool-path { font-family: monospace; background: rgba(0,0,0,0.08); padding: 2px 8px; border-radius: 4px; }
+.file-tool-fullpath { font-family: monospace; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; word-break: break-all; }
+.file-content { margin: 0; }
+.edit-section { display: flex; margin: 4px 0; border-radius: 4px; overflow: hidden; }
+.edit-label { padding: 8px 12px; font-weight: bold; font-family: monospace; display: flex; align-items: flex-start; }
+.edit-old { background: #fce4ec; }
+.edit-old .edit-label { color: #b71c1c; background: #f8bbd9; }
+.edit-old .edit-content { color: #880e4f; }
+.edit-new { background: #e8f5e9; }
+.edit-new .edit-label { color: #1b5e20; background: #a5d6a7; }
+.edit-new .edit-content { color: #1b5e20; }
+.edit-content { margin: 0; flex: 1; background: transparent; font-size: 0.85rem; }
+.edit-replace-all { font-size: 0.75rem; font-weight: normal; color: var(--text-muted); }
+.write-tool .truncatable.truncated::after { background: linear-gradient(to bottom, transparent, #e6f4ea); }
+.edit-tool .truncatable.truncated::after { background: linear-gradient(to bottom, transparent, #fff0e5); }
+.todo-list { background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%); border: 1px solid #81c784; border-radius: 8px; padding: 12px; margin: 12px 0; }
+.todo-header { font-weight: 600; color: #2e7d32; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; font-size: 0.95rem; }
+.todo-items { list-style: none; margin: 0; padding: 0; }
+.todo-item { display: flex; align-items: flex-start; gap: 10px; padding: 6px 0; border-bottom: 1px solid rgba(0,0,0,0.06); font-size: 0.9rem; }
+.todo-item:last-child { border-bottom: none; }
+.todo-icon { flex-shrink: 0; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-weight: bold; border-radius: 50%; }
+.todo-completed .todo-icon { color: #2e7d32; background: rgba(46, 125, 50, 0.15); }
+.todo-completed .todo-content { color: #558b2f; text-decoration: line-through; }
+.todo-in-progress .todo-icon { color: #f57c00; background: rgba(245, 124, 0, 0.15); }
+.todo-in-progress .todo-content { color: #e65100; font-weight: 500; }
+.todo-pending .todo-icon { color: #757575; background: rgba(0,0,0,0.05); }
+.todo-pending .todo-content { color: #616161; }
+pre { background: var(--code-bg); color: var(--code-text); padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.85rem; line-height: 1.5; margin: 8px 0; white-space: pre-wrap; word-wrap: break-word; }
+pre.json { color: #e0e0e0; }
+code { background: rgba(0,0,0,0.08); padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+pre code { background: none; padding: 0; }
+.user-content { margin: 0; }
+.truncatable { position: relative; }
+.truncatable.truncated .truncatable-content { max-height: 200px; overflow: hidden; }
+.truncatable.truncated::after { content: ''; position: absolute; bottom: 32px; left: 0; right: 0; height: 60px; background: linear-gradient(to bottom, transparent, var(--card-bg)); pointer-events: none; }
+.message.user .truncatable.truncated::after { background: linear-gradient(to bottom, transparent, var(--user-bg)); }
+.message.tool-reply .truncatable.truncated::after { background: linear-gradient(to bottom, transparent, #fff8e1); }
+.tool-use .truncatable.truncated::after { background: linear-gradient(to bottom, transparent, var(--tool-bg)); }
+.tool-result .truncatable.truncated::after { background: linear-gradient(to bottom, transparent, var(--tool-result-bg)); }
+.expand-btn { display: none; width: 100%; padding: 8px 16px; margin-top: 4px; background: rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.1); border-radius: 6px; cursor: pointer; font-size: 0.85rem; color: var(--text-muted); }
+.expand-btn:hover { background: rgba(0,0,0,0.1); }
+.truncatable.truncated .expand-btn, .truncatable.expanded .expand-btn { display: block; }
+.pagination { display: flex; justify-content: center; gap: 8px; margin: 24px 0; flex-wrap: wrap; }
+.pagination a, .pagination span { padding: 5px 10px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; }
+.pagination a { background: var(--card-bg); color: var(--user-border); border: 1px solid var(--user-border); }
+.pagination a:hover { background: var(--user-bg); }
+.pagination .current { background: var(--user-border); color: white; }
+.pagination .disabled { color: var(--text-muted); border: 1px solid #ddd; }
+.pagination .index-link { background: var(--user-border); color: white; }
+details.continuation { margin-bottom: 16px; }
+details.continuation summary { cursor: pointer; padding: 12px 16px; background: var(--user-bg); border-left: 4px solid var(--user-border); border-radius: 12px; font-weight: 500; color: var(--text-muted); }
+details.continuation summary:hover { background: rgba(25, 118, 210, 0.15); }
+details.continuation[open] summary { border-radius: 12px 12px 0 0; margin-bottom: 0; }
+.index-item { margin-bottom: 16px; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); background: var(--user-bg); border-left: 4px solid var(--user-border); }
+.index-item a { display: block; text-decoration: none; color: inherit; }
+.index-item a:hover { background: rgba(25, 118, 210, 0.1); }
+.index-item-header { display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; background: rgba(0,0,0,0.03); font-size: 0.85rem; }
+.index-item-number { font-weight: 600; color: var(--user-border); }
+.index-item-content { padding: 16px; }
+.index-item-stats { padding: 8px 16px 12px 32px; font-size: 0.85rem; color: var(--text-muted); border-top: 1px solid rgba(0,0,0,0.06); }
+.index-item-commit { margin-top: 6px; padding: 4px 8px; background: #fff3e0; border-radius: 4px; font-size: 0.85rem; color: #e65100; }
+.index-item-commit code { background: rgba(0,0,0,0.08); padding: 1px 4px; border-radius: 3px; font-size: 0.8rem; margin-right: 6px; }
+.commit-card { margin: 8px 0; padding: 10px 14px; background: #fff3e0; border-left: 4px solid #ff9800; border-radius: 6px; }
+.commit-card a { text-decoration: none; color: #5d4037; display: block; }
+.commit-card a:hover { color: #e65100; }
+.commit-card-hash { font-family: monospace; color: #e65100; font-weight: 600; margin-right: 8px; }
+.index-commit { margin-bottom: 12px; padding: 10px 16px; background: #fff3e0; border-left: 4px solid #ff9800; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+.index-commit a { display: block; text-decoration: none; color: inherit; }
+.index-commit a:hover { background: rgba(255, 152, 0, 0.1); margin: -10px -16px; padding: 10px 16px; border-radius: 8px; }
+.index-commit-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; margin-bottom: 4px; }
+.index-commit-hash { font-family: monospace; color: #e65100; font-weight: 600; }
+.index-commit-msg { color: #5d4037; }
+.index-item-long-text { margin-top: 8px; padding: 12px; background: var(--card-bg); border-radius: 8px; border-left: 3px solid var(--assistant-border); }
+.index-item-long-text .truncatable.truncated::after { background: linear-gradient(to bottom, transparent, var(--card-bg)); }
+.index-item-long-text-content { color: var(--text-color); }
+#search-box { display: none; align-items: center; gap: 8px; }
+#search-box input { padding: 6px 12px; border: 1px solid var(--assistant-border); border-radius: 6px; font-size: 16px; width: 180px; }
+#search-box button, #modal-search-btn, #modal-close-btn { background: var(--user-border); color: white; border: none; border-radius: 6px; padding: 6px 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+#search-box button:hover, #modal-search-btn:hover { background: #1565c0; }
+#modal-close-btn { background: var(--text-muted); margin-left: 8px; }
+#modal-close-btn:hover { background: #616161; }
+#search-modal[open] { border: none; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.2); padding: 0; width: 90vw; max-width: 900px; height: 80vh; max-height: 80vh; display: flex; flex-direction: column; }
+#search-modal::backdrop { background: rgba(0,0,0,0.5); }
+.search-modal-header { display: flex; align-items: center; gap: 8px; padding: 16px; border-bottom: 1px solid var(--assistant-border); background: var(--bg-color); border-radius: 12px 12px 0 0; }
+.search-modal-header input { flex: 1; padding: 8px 12px; border: 1px solid var(--assistant-border); border-radius: 6px; font-size: 16px; }
+#search-status { padding: 8px 16px; font-size: 0.85rem; color: var(--text-muted); border-bottom: 1px solid rgba(0,0,0,0.06); }
+#search-results { flex: 1; overflow-y: auto; padding: 16px; }
+.search-result { margin-bottom: 16px; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.search-result a { display: block; text-decoration: none; color: inherit; }
+.search-result a:hover { background: rgba(25, 118, 210, 0.05); }
+.search-result-page { padding: 6px 12px; background: rgba(0,0,0,0.03); font-size: 0.8rem; color: var(--text-muted); border-bottom: 1px solid rgba(0,0,0,0.06); }
+.search-result-content { padding: 12px; }
+.search-result mark { background: #fff59d; padding: 1px 2px; border-radius: 2px; }
+@media (max-width: 600px) { body { padding: 8px; } .message, .index-item { border-radius: 8px; } .message-content, .index-item-content { padding: 12px; } pre { font-size: 0.8rem; padding: 8px; } #search-box input { width: 120px; } #search-modal[open] { width: 95vw; height: 90vh; } }
+</style>
+</head>
+<body>
+    <div class="container">
+        <h1><a href="index.html" style="color: inherit; text-decoration: none;">Claude Code transcript</a> - page 1/2</h1>
+        
+
+<div class="pagination">
+<a href="index.html" class="index-link">Index</a>
+<span class="disabled">&larr; Prev</span>
+<span class="current">1</span>
+<a href="page-002.html">2</a>
+<a href="page-002.html">Next &rarr;</a>
+</div>
+
+        
+<div class="message user" id="msg-2026-01-03T21-50-34-273Z"><div class="message-header"><span class="role-label">User</span><a href="#msg-2026-01-03T21-50-34-273Z" class="timestamp-link"><time datetime="2026-01-03T21:50:34.273Z" data-timestamp="2026-01-03T21:50:34.273Z">2026-01-03T21:50:34.273Z</time></a></div><div class="message-content">
+<div class="user-content"><p>Caveat: The messages below were generated by the user while running local commands. DO NOT respond to these messages or otherwise consider them in your response unless the user explicitly asks you to.</p></div></div></div>
+<div class="message user" id="msg-2026-01-03T21-50-34-269Z"><div class="message-header"><span class="role-label">User</span><a href="#msg-2026-01-03T21-50-34-269Z" class="timestamp-link"><time datetime="2026-01-03T21:50:34.269Z" data-timestamp="2026-01-03T21:50:34.269Z">2026-01-03T21:50:34.269Z</time></a></div><div class="message-content">
+<div class="user-content"><p><command-name>/clear</command-name>
+            <command-message>clear</command-message>
+            <command-args></command-args></p></div></div></div>
+<div class="message user" id="msg-2026-01-03T21-50-34-273Z"><div class="message-header"><span class="role-label">User</span><a href="#msg-2026-01-03T21-50-34-273Z" class="timestamp-link"><time datetime="2026-01-03T21:50:34.273Z" data-timestamp="2026-01-03T21:50:34.273Z">2026-01-03T21:50:34.273Z</time></a></div><div class="message-content">
+<div class="user-content"><p><local-command-stdout></local-command-stdout></p></div></div></div>
+<div class="message user" id="msg-2026-01-06T09-19-59-590Z"><div class="message-header"><span class="role-label">User</span><a href="#msg-2026-01-06T09-19-59-590Z" class="timestamp-link"><time datetime="2026-01-06T09:19:59.590Z" data-timestamp="2026-01-06T09:19:59.590Z">2026-01-06T09:19:59.590Z</time></a></div><div class="message-content">
+<div class="user-content"><p>can you update the colors so that the background is black and the black pieces are white?</p></div></div></div>
+<div class="message assistant" id="msg-2026-01-06T09-20-05-044Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-01-06T09-20-05-044Z" class="timestamp-link"><time datetime="2026-01-06T09:20:05.044Z" data-timestamp="2026-01-06T09:20:05.044Z">2026-01-06T09:20:05.044Z</time></a></div><div class="message-content">
+<div class="thinking"><div class="thinking-label">Thinking</div><p>The user is asking me to update colors in some project, but I don't have context about what project they're referring to. They mention "background" and "black pieces" which suggests this might be a chess game or similar board game application.</p>
+<p>Let me first explore the current directory to understand what files are present and what project this might be.</p></div></div></div>
+<div class="message assistant" id="msg-2026-01-06T09-20-05-900Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-01-06T09-20-05-900Z" class="timestamp-link"><time datetime="2026-01-06T09:20:05.900Z" data-timestamp="2026-01-06T09:20:05.900Z">2026-01-06T09:20:05.900Z</time></a></div><div class="message-content">
+<div class="assistant-text"><p>I'd be happy to help update the colors, but I need to first see what files are in your current directory to understand what project you're working with.</p></div></div></div>
+<div class="message assistant" id="msg-2026-01-06T09-20-06-268Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-01-06T09-20-06-268Z" class="timestamp-link"><time datetime="2026-01-06T09:20:06.268Z" data-timestamp="2026-01-06T09:20:06.268Z">2026-01-06T09:20:06.268Z</time></a></div><div class="message-content">
+<div class="tool-use bash-tool" data-tool-id="toolu_01WPScJGKXHWAZmTym7tnfJV">
+<div class="tool-header"><span class="tool-icon">$</span> Bash</div>
+<div class="tool-description">List files in current directory</div><div class="truncatable"><div class="truncatable-content"><pre class="bash-command">ls -la</pre></div><button class="expand-btn">Show more</button></div>
+</div></div></div>
+<div class="message tool-reply" id="msg-2026-01-06T09-20-06-411Z"><div class="message-header"><span class="role-label">Tool reply</span><a href="#msg-2026-01-06T09-20-06-411Z" class="timestamp-link"><time datetime="2026-01-06T09:20:06.411Z" data-timestamp="2026-01-06T09:20:06.411Z">2026-01-06T09:20:06.411Z</time></a></div><div class="message-content"><div class="tool-result"><div class="truncatable"><div class="truncatable-content"><pre>total 110618424
+drwx------@   818 lichard  staff        26176 Jan  5 17:18 .
+drwxr-x---+    85 lichard  staff         2720 Jan  6 01:20 ..
+-rw-r--r--@     1 lichard  staff        16388 Jan  2 23:22 .DS_Store
+drwx------      3 lichard  staff           96 Dec 29 23:27 .claude
+drwxr-xr-x      5 lichard  staff          160 Dec 18 22:23 .esphome
+-rw-r--r--      1 lichard  staff          170 Dec 18 22:22 .gitignore
+-rw-r--r--      1 lichard  staff            0 Feb 26  2024 .localized
+-rw-r--r--@     1 lichard  staff     16134307 Aug 14  2024 062022_HeadShotDay_-579.jpg
+-rw-r--r--@     1 lichard  staff     12703494 Oct 29  2024 1715210149-study_bcan-user_85c4342c08e9246e12f298b47cffe792-exercise_sit_to_stand-set_1-reps_5.webm
+-rw-r--r--@     1 lichard  staff        15484 Jan 27  2025 2024-11-15_offer.pdf
+-rw-r--r--@     1 lichard  staff        73620 Jul  7  2024 2024.01.04-Himitsu_Teryiaki-Doordash.pdf
+-rw-r--r--@     1 lichard  staff        74120 Jul  7  2024 2024.01.22-Golden_Olive-Doordash.pdf
+-rw-r--r--@     1 lichard  staff        34530 Jul  7  2024 2024.01.29-Gordito-Uber_Eats.pdf
+-rw-r--r--@     1 lichard  staff        40394 Jul  7  2024 2024.02.05-Meesum-Uber_Eats.pdf
+-rw-r--r--@     1 lichard  staff        32587 Jul  7  2024 2024.02.12-Wonder_Ethiopian-Uber_Eats.pdf
+-rw-r--r--@     1 lichard  staff        69507 Jul  7  2024 2024.02.26-Rachels_Bagels-Doordash.pdf
+-rw-r--r--@     1 lichard  staff        73189 Jul  7  2024 2024.03.04a-Sizzle_Crunch-Doordash.pdf
+-rw-r--r--@     1 lichard  staff        65679 Jul  7  2024 2024.03.04b-Sizzle_Crunch-Doordash.pdf
+-rw-r--r--@     1 lichard  staff        95924 Jul  7  2024 2024.03.25-A_Plus-Doordash.pdf
+-rw-r--r--@     1 lichard  staff        31865 Jul  7  2024 2024.04.01-Wonder_Ethiopian-Uber_Eats.pdf
+-rw-r--r--@     1 lichard  staff        72659 Jul  7  2024 2024.04.08-Due_Cucina-Doordash.pdf
+-rw-r--r--@     1 lichard  staff       106521 Jul  7  2024 2024.04.22-A_Plus-Doordash.pdf
+-rw-r--r--@     1 lichard  staff        70372 Jul  7  2024 2024.04.29-Cafe_Ave-Doordash.pdf
+-rw-r--r--@     1 lichard  staff        69282 Jul  7  2024 2024.05.06a-Cafe_Ave-Doordash.pdf
+-rw-r--r--@     1 lichard  staff        64812 Jul  7  2024 2024.05.06b-Cafe_Ave-Doordash.pdf
+-rw-r--r--@     1 lichard  staff        71040 Jul  7  2024 2024.05.13-Arepa-Doordash.pdf
+-rw-r--r--@     1 lichard  staff        69155 Jul  7  2024 2024.05.20-Cafe_Ave-Doordash.pdf
+-rw-r--r--@     1 lichard  staff        70612 Jul  7  2024 2024.05.30-Sweetgreen-Doordash.pdf
+-rw-r--r--@     1 lichard  staff      2235977 Mar 24  2025 2024.07.08-Ubicomp_seminar-Vinason.pdf
+-rw-r--r--@     1 lichard  staff      5586481 Mar 24  2025 2024.09.30-Ubicomp_seminar-Sizzle_and_Crunch.pdf
+-rw-r--r--@     1 lichard  staff      1234354 Mar 24  2025 2024.10.21-Ubicomp_seminar-Korean_Tofu_House.pdf
+-rw-r--r--@     1 lichard  staff      4999046 Mar 24  2025 2024.11.04-Ubicomp_seminar-Palmita.pdf
+-rw-r--r--@     1 lichard  staff      4484081 Mar 24  2025 2024.11.18-Ubicomp_seminar-Rondo.pdf
+-rw-r--r--@     1 lichard  staff      4593787 Mar 24  2025 2024.11.25-Ubicomp_seminar-Musubi_Kai.pdf
+-rw-r--r--@     1 lichard  staff      5336025 Jan 15  2025 20241118-CSE_Headshots-1324.jpg
+-rw-r--r--@     1 lichard  staff      5163852 Jan 15  2025 20241118-CSE_Headshots-1325.jpg
+-rw-r--r--@     1 lichard  staff      5081281 Jan 15  2025 20241118-CSE_Headshots-1326.jpg
+-rw-r--r--@     1 lichard  staff      5676346 Jan 15  2025 20241118-CSE_Headshots-1327.jpg
+-rw-r--r--@     1 lichard  staff      5770551 Jan 15  2025 20241118-CSE_Headshots-1328.jpg
+-rw-r--r--@     1 lichard  staff      5832621 Jan 15  2025 20241118-CSE_Headshots-1329.jpg
+-rw-r--r--@     1 lichard  staff      4348782 Jan 15  2025 20241118-CSE_Headshots-1330.jpg
+-rw-r--r--@     1 lichard  staff      4876123 Jan 15  2025 20241118-CSE_Headshots-1331.jpg
+-rw-r--r--@     1 lichard  staff      4823946 Jan 15  2025 20241118-CSE_Headshots-1332.jpg
+-rw-r--r--@     1 lichard  staff      4878321 Jan 15  2025 20241118-CSE_Headshots-1333.jpg
+-rw-r--r--@     1 lichard  staff      4977082 Jan 15  2025 20241118-CSE_Headshots-1334.jpg
+-rw-r--r--@     1 lichard  staff      4909092 Jan 15  2025 20241118-CSE_Headshots-1335.jpg
+-rw-r--r--@     1 lichard  staff      4768716 Jan 15  2025 20241118-CSE_Headshots-1336.jpg
+-rw-r--r--@     1 lichard  staff      4694822 Jan 15  2025 20241118-CSE_Headshots-1337.jpg
+-rw-r--r--@     1 lichard  staff      4674197 Jan 15  2025 20241118-CSE_Headshots-1338.jpg
+-rw-r--r--@     1 lichard  staff      4678219 Jan 15  2025 20241118-CSE_Headshots-1339.jpg
+-rw-r--r--@     1 lichard  staff     12145601 Jan 15  2025 20241118-CSE_Headshots-1340.jpg
+-rw-r--r--@     1 lichard  staff     11452065 Jan 15  2025 20241118-CSE_Headshots-1341.jpg
+-rw-r--r--@     1 lichard  staff     11607709 Jan 15  2025 20241118-CSE_Headshots-1342.jpg
+-rw-r--r--@     1 lichard  staff     11492798 Jan 15  2025 20241118-CSE_Headshots-1343.jpg
+-rw-r--r--@     1 lichard  staff     11643627 Jan 15  2025 20241118-CSE_Headshots-1344.jpg
+-rw-r--r--@     1 lichard  staff     11542970 Jan 15  2025 20241118-CSE_Headshots-1345.jpg
+-rw-r--r--@     1 lichard  staff      9798991 Jan 15  2025 20241118-CSE_Headshots-1346.jpg
+-rw-r--r--@     1 lichard  staff      9691793 Jan 15  2025 20241118-CSE_Headshots-1347.jpg
+-rw-r--r--@     1 lichard  staff      9805533 Jan 15  2025 20241118-CSE_Headshots-1348.jpg
+-rw-r--r--@     1 lichard  staff      9671063 Jan 15  2025 20241118-CSE_Headshots-1349.jpg
+-rw-r--r--@     1 lichard  staff     11369555 Jan 15  2025 20241118-CSE_Headshots-1350.jpg
+-rw-r--r--@     1 lichard  staff     11548322 Jan 15  2025 20241118-CSE_Headshots-1351.jpg
+-rw-r--r--@     1 lichard  staff     11420598 Jan 15  2025 20241118-CSE_Headshots-1352.jpg
+-rw-r--r--@     1 lichard  staff     11593069 Jan 15  2025 20241118-CSE_Headshots-1353.jpg
+-rw-r--r--@     1 lichard  staff     11519242 Jan 15  2025 20241118-CSE_Headshots-1354.jpg
+-rw-r--r--@     1 lichard  staff     11709809 Jan 15  2025 20241118-CSE_Headshots-1355.jpg
+-rw-r--r--@     1 lichard  staff     11599615 Jan 15  2025 20241118-CSE_Headshots-1356.jpg
+-rw-r--r--@     1 lichard  staff     11260840 Jan 15  2025 20241118-CSE_Headshots-1357.jpg
+-rw-r--r--@     1 lichard  staff     10879869 Jan 15  2025 20241118-CSE_Headshots-1358.jpg
+-rw-r--r--@     1 lichard  staff     11193356 Jan 15  2025 20241118-CSE_Headshots-1359.jpg
+-rw-r--r--@     1 lichard  staff     11210278 Jan 15  2025 20241118-CSE_Headshots-1360.jpg
+-rw-r--r--@     1 lichard  staff     11539037 Jan 15  2025 20241118-CSE_Headshots-1361.jpg
+-rw-r--r--@     1 lichard  staff     11243329 Jan 15  2025 20241118-CSE_Headshots-1362.jpg
+-rw-r--r--@     1 lichard  staff     10027732 Jan 15  2025 20241118-CSE_Headshots-1363.jpg
+-rw-r--r--@     1 lichard  staff     10083488 Jan 15  2025 20241118-CSE_Headshots-1364.jpg
+-rw-r--r--@     1 lichard  staff      5436037 Jan 15  2025 20241118-CSE_Headshots-1365.jpg
+-rw-r--r--@     1 lichard  staff      5520888 Jan 15  2025 20241118-CSE_Headshots-1366.jpg
+-rw-r--r--@     1 lichard  staff      5089758 Jan 15  2025 20241118-CSE_Headshots-1367.jpg
+-rw-r--r--@     1 lichard  staff      4812408 Jan 15  2025 20241118-CSE_Headshots-1368.jpg
+-rw-r--r--@     1 lichard  staff      5159273 Jan 15  2025 20241118-CSE_Headshots-1369.jpg
+-rw-r--r--@     1 lichard  staff      5193174 Jan 15  2025 20241118-CSE_Headshots-1370.jpg
+-rw-r--r--@     1 lichard  staff      4977942 Jan 15  2025 20241118-CSE_Headshots-1371.jpg
+-rw-r--r--@     1 lichard  staff      4970629 Jan 15  2025 20241118-CSE_Headshots-1372.jpg
+-rw-r--r--@     1 lichard  staff      4988438 Jan 15  2025 20241118-CSE_Headshots-1373.jpg
+-rw-r--r--@     1 lichard  staff       347716 Apr  6  2025 2024_FEDERALWORKSHEETS_2025-04-06_070411.pdf
+-rw-r--r--@     1 lichard  staff       172935 Apr  6  2025 2024_FEDERAL_RETURN_2025-04-06_070052.pdf
+-rw-r--r--@     1 lichard  staff          690 Sep 29  2024 2024_autumn_CSE_475_A_students.csv
+-rw-r--r--@     1 lichard  staff         2725 Sep 29  2024 2024_autumn_E_E_475_A_students.csv
+-rw-r--r--@     1 lichard  staff          678 Sep 29  2024 2024_autumn_E_E_542_A_students.csv
+-rw-r--r--@     1 lichard  staff      3859211 Mar 24  2025 2025.01.06-Ubicomp_seminar-Crackle_Mi.pdf
+-rw-r--r--@     1 lichard  staff      3050383 Mar 24  2025 2025.01.13-Ubicomp_seminar-Hurry_Curry.pdf
+-rw-r--r--@     1 lichard  staff      2519203 Mar 24  2025 2025.01.27-Ubicomp_seminar-Spice_Bliss.pdf
+-rw-r--r--@     1 lichard  staff      5737084 Mar 24  2025 2025.02.03-Ubicomp_seminar-Musubi_Kai.pdf
+-rw-r--r--@     1 lichard  staff      4593894 Mar 24  2025 2025.02.06-Ubicomp_lab_lunch-Bongos.pdf
+-rw-r--r--@     1 lichard  staff      4648223 Mar 24  2025 2025.02.10-Ubicomp_seminar-Musubi_Kai.pdf
+-rw-r--r--@     1 lichard  staff      3501546 Mar 24  2025 2025.02.24-Ubicomp_seminar-Musubi_Kai.pdf
+-rw-r--r--@     1 lichard  staff      4492983 Mar 24  2025 2025.03.03-Ubicomp_seminar-Sizzle_and_Crunch.pdf
+-rw-r--r--@     1 lichard  staff      3322699 Mar 24  2025 2025.03.10-Ubicomp_seminar-Hurry_Curry.pdf
+-rw-r--r--@     1 lichard  staff        50281 Mar 24  2025 2025.03.14 - Columbia Talk - GMT20250314-200612_Recording.cc.vtt
+-rw-r--r--@     1 lichard  staff        52583 Mar 24  2025 2025.03.14 - Columbia Talk - GMT20250314-200612_Recording.transcript.vtt
+-rw-r--r--@     1 lichard  staff     98662932 Mar 24  2025 2025.03.14 - Columbia Talk - GMT20250314-200612_Recording_1920x1080.mp4
+-rw-r--r--@     1 lichard  staff        48043 Oct 12 14:41 2025.10.12-ExerciseRx-NSF_ACCESS_application.pdf
+-rw-r--r--@     1 lichard  staff       504039 Aug  4 10:15 20250802_113132.jpg
+-rw-r--r--@     1 lichard  staff        38270 May 20  2025 2025_NIH_Browd Biosketch-May 2025 v1.docx
+-rw-r--r--@     1 lichard  staff      1231861 Nov 17 19:09 2026-ExerciseRx_arthritis-PREPRINT.pdf
+-rw-r--r--@     1 lichard  staff      1874532 Oct  1  2024 231016-CSCW-DC-poster.pdf
+-rw-r--r--@     1 lichard  staff       177620 Sep 16 01:08 2405471 - R1.pdf
+-rw-r--r--@     1 lichard  staff       184838 Sep 16 01:09 2405471 - R2.pdf
+-rw-r--r--@     1 lichard  staff       188838 Sep 16 01:08 2405471 - R3.pdf
+-rw-r--r--@     1 lichard  staff       184802 Sep 16 01:08 2405471 - R4.pdf
+-rw-r--r--@     1 lichard  staff       208850 Sep 13 01:17 2405471 - Reviews.pdf
+-rw-r--r--@     1 lichard  staff      1809137 Sep 16 01:08 2405471 - Reviews.png
+-rw-r--r--@     1 lichard  staff      2850596 Sep 16 01:09 2405471.pdf
+-rw-r--r--@     1 lichard  staff      1587448 Oct  6 12:38 2850-Article Text-6600-1-10-20190624.pdf
+-rw-r--r--@     1 lichard  staff     15849132 Jun 17  2025 30s preview.mp4
+-rw-r--r--@     1 lichard  staff      2248563 Feb  4  2025 3173574.3173682.pdf
+-rw-r--r--@     1 lichard  staff      2544411 Apr 16  2025 34752-Article Text-38819-1-2-20250410.pdf
+-rw-r--r--@     1 lichard  staff     22813487 Oct 10 01:43 3746059.3747671.pdf
+-rw-r--r--@     1 lichard  staff      2533849 Mar 24  2025 4152222_Egrant-ioannou_beacon_R21.pdf
+-rw-r--r--@     1 lichard  staff      9334945 Mar 24  2025 4153181_Egrant-fogarty_self_tracking_R01.pdf
+-rw-r--r--@     1 lichard  staff      6551794 May  9  2025 4347_BP.pdf
+-rw-r--r--@     1 lichard  staff       126279 Dec 16  2024 475_final_report.pdf
+-rw-r--r--@     1 lichard  staff       104435 Dec 16  2024 475_kickstarter.pdf
+-rw-r--r--@     1 lichard  staff        83189 Dec 16  2024 475_prd.pdf
+-rw-r--r--@     1 lichard  staff      1784675 Oct 15  2024 475_software_lecture.pdf
+-rw-r--r--@     1 lichard  staff     50266809 Dec 16  2024 475_team_2_kickstarter_C.pdf
+-rw-r--r--@     1 lichard  staff       234810 Dec 16  2024 475_team_2_prd_D.pdf
+-rw-r--r--@     1 lichard  staff       309695 Dec 16  2024 475_team_2_report_C.pdf
+-rw-r--r--@     1 lichard  staff       173545 Dec 16  2024 475_team_3_kickstarter_D.pdf
+-rw-r--r--@     1 lichard  staff       162382 Dec 16  2024 475_team_3_prd_N.pdf
+-rw-r--r--@     1 lichard  staff       810024 Dec 16  2024 475_team_3_report_E.pdf
+-rw-r--r--@     1 lichard  staff      2268062 Dec 16  2024 475_team_4_kickstarter_E.pdf
+-rw-r--r--@     1 lichard  staff       232934 Dec 16  2024 475_team_4_prd_E.pdf
+-rw-r--r--@     1 lichard  staff      6045285 Dec 16  2024 475_team_4_report_E.pdf
+-rw-r--r--@     1 lichard  staff      2414811 Dec 16  2024 475_team_5_kickstarter_E.pdf
+-rw-r--r--@     1 lichard  staff       258651 Dec 16  2024 475_team_5_prd_E.pdf
+-rw-r--r--@     1 lichard  staff      1526410 Dec 16  2024 475_team_5_report_E.pdf
+-rw-r--r--@     1 lichard  staff       745258 Dec 16  2024 475_team_6_kickstarter_C.pdf
+-rw-r--r--@     1 lichard  staff       170733 Dec 16  2024 475_team_6_prd_N.pdf
+-rw-r--r--@     1 lichard  staff       849936 Dec 16  2024 475_team_6_report_N.pdf
+-rw-r--r--@     1 lichard  staff      4976425 Dec 16  2024 475_team_7_kickstarter_E.pdf
+-rw-r--r--@     1 lichard  staff       120457 Dec 16  2024 475_team_7_prd_C.pdf
+-rw-r--r--@     1 lichard  staff     19901884 Dec 16  2024 475_team_7_report_E.pdf
+-rw-r--r--@     1 lichard  staff      2570989 Dec 10  2024 495_final_report.pdf
+drwxr-xr-x@    16 lichard  staff          512 Mar  6  2025 510 readings
+-rw-r--r--@     1 lichard  staff     23859308 Oct 18  2024 974648092-MIT.pdf
+-rw-r--r--@     1 lichard  staff       182562 Jan 23  2025 AAUP-FCS_2023-24_Seattle.xlsx
+-rw-r--r--@     1 lichard  staff      4446940 Mar  3  2025 ACCEPTED_UNPUBLISHED-CHI_2025_Beacon.pdf
+-rw-r--r--@     1 lichard  staff     10826984 Mar 18  2025 ACCEPTED_UNPUBLISHED_ECG_Necklace_CHI.pdf
+-rw-r--r--@     1 lichard  staff       260561 Feb 18  2025 AMC7135.PDF
+drwxrwxr-x@    15 lichard  staff          480 Sep 17  2024 AMIA-Latex-Template-master
+-rw-r--r--@     1 lichard  staff       129936 Oct  3 11:12 AMIA-Latex-Template-master.zip
+-rw-r--r--@     1 lichard  staff     19280934 May 24  2025 AMMANABROLU-DISSERTATION-2021.pdf
+-rw-r--r--@     1 lichard  staff       224783 Jan  8  2025 APPLICATION_IRB_Protocol_v5.2_2024.12.23.docx
+-rw-r--r--@     1 lichard  staff       624486 Mar 28  2025 APS011 Sources of error in TWR.pdf
+-rw-r--r--@     1 lichard  staff     39654264 Jun 10  2025 ARORA-DISSERTATION-2023.pdf
+-rw-r--r--@     1 lichard  staff       336432 Nov  2  2024 ActivityClassificationDoppler_IRB_v6.2-2(1).docx
+-rw-r--r--@     1 lichard  staff      9727288 Dec  9  2024 Actual_TEI_2023_AcousTickBoard.pdf
+-rw-r--r--@     1 lichard  staff      5126609 Jun 17  2025 Adjustable tablet stand - 2351253.zip
+-rw-r--r--@     1 lichard  staff     45882828 Oct  1  2024 AlexMariakakis_generals.pdf
+-rw-r--r--@     1 lichard  staff      1990191 Oct 20 01:03 Apple_ML4Health-ExerciseRx_poster.pdf
+-rw-r--r--@     1 lichard  staff        92306 Jul 21 11:46 Approval_STUDY00004521_Ioannou_Initial.pdf
+-rw-r--r--@     1 lichard  staff     19367900 Jun 10  2025 BYRNE-DISSERTATION-2021.pdf
+-rw-r--r--@     1 lichard  staff    163812527 Jul 30 16:44 Bambu_Studio_mac-v02.01.01.52-20250616155614.dmg
+-rw-r--r--@     1 lichard  staff      6218844 Sep  9  2024 Beacon Gap Fund Pitch.pdf
+-rw-r--r--@     1 lichard  staff      3137545 Sep  9  2024 Beacon Gastrointestinal Frontiers Talk.pdf
+-rw-r--r--@     1 lichard  staff      3899557 Sep  9  2024 Beacon I-Corps Pitch.pdf
+-rw-r--r--@     1 lichard  staff       136222 Apr 10  2025 Beacon at-home exit interview script.pdf
+-rw-r--r--@     1 lichard  staff       325536 Jan  8  2025 Beacon interview study IRB.docx
+-rw-r--r--@     1 lichard  staff       104022 Jul 21 05:35 Beyond_the_Desktop_Metaphor_Designing_Integrated_D..._----_(Pg_95--108).pdf
+-rw-r--r--@     1 lichard  staff       138924 Jul  3  2025 Bio_running_blog-1.jpg
+-rw-r--r--@     1 lichard  staff       106110 May 20  2025 Biosketch_Fogarty.pdf
+-rw-r--r--@     1 lichard  staff        43013 May 15  2025 Biosketch_LinMarch2025.docx
+-rw-r--r--@     1 lichard  staff        66440 May 20  2025 Biosketch_Munson.pdf
+-rw-r--r--@     1 lichard  staff     10703029 Aug 28 11:29 BodyBeat.pdf
+-rw-r--r--@     1 lichard  staff        40960 Mar 19  2025 Budget Justification_X Pai Initiative.doc
+-rw-r--r--@     1 lichard  staff      3688597 Sep 12  2024 CHI 2025 SonarFit.zip
+-rw-r--r--@     1 lichard  staff     10536175 Dec  9  2024 CHI2022_AcousTickBoard.pdf
+-rw-r--r--@     1 lichard  staff       434994 Nov  2  2024 CHI_2025-ExerciseRx_CP-under_review.pdf
+-rw-r--r--@     1 lichard  staff      4441261 Dec 11  2024 CHI_2025_Beacon_clean.pdf
+-rw-r--r--@     1 lichard  staff      4442600 Dec 11  2024 CHI_2025_Beacon_marked.pdf
+-rw-r--r--@     1 lichard  staff      4450944 Jan 21  2025 CHI_2025_Beacon_preprint.pdf
+-rw-r--r--@     1 lichard  staff      4346492 Nov  2  2024 CHI_2025_Beacon_under_review.pdf
+-rw-r--r--@     1 lichard  staff       433103 Oct 11  2024 CHI_2025_Case_Study___ExerciseRx_CP (1).pdf
+-rw-r--r--@     1 lichard  staff       433097 Oct 11  2024 CHI_2025_Case_Study___ExerciseRx_CP.pdf
+-rw-r--r--@     1 lichard  staff      2940635 Sep 12  2024 CHI_2025_SonarFit.pdf
+-rw-r--r--@     1 lichard  staff       452909 Oct 20 00:07 COI_Form.pdf
+-rw-r--r--@     1 lichard  staff      2062888 Jul 29 09:08 CSE Ph.Ds.pdf
+-rw-r--r--@     1 lichard  staff      1815474 Oct 28  2024 CSE_mark_HEX.eps
+-rw-r--r--@     1 lichard  staff      7296786 Oct 24 13:31 Casa del Rey lease.pdf
+-rw-r--r--@     1 lichard  staff      1601641 Aug 29 13:29 CeD.253K-ZITK-RRIU.pdf
+-rw-r--r--@     1 lichard  staff      1808543 Aug 29 13:29 CeD.258K-O4CB-RSIG.pdf
+-rw-r--r--@     1 lichard  staff       122943 Jun 11  2025 CertificateOfCompletion.pdf
+-rw-r--r--@     1 lichard  staff       941984 Oct 14 15:01 Chris_Harrison-Research_Statement.pdf
+-rw-r--r--@     1 lichard  staff        24394 Jun 25  2025 Cindy_Lin-recommendation_for_Richard_Li.docx
+-rwx------@     1 lichard  staff       910058 Jun 25  2025 Cindy_Lin-recommendation_for_Richard_Li.pages
+-rw-r--r--@     1 lichard  staff       314778 Jun 27  2025 Comparison_flight-SEA_to_HND_roundtrip.pdf
+-rw-r--r--@     1 lichard  staff        38370 Jul 21 11:46 Consent Form- CFF study 09Jun2023 (1).docx
+-rw-r--r--@     1 lichard  staff        38370 Apr 11  2025 Consent Form- CFF study 09Jun2023.docx
+-rw-r--r--@     1 lichard  staff       128362 Apr 11  2025 Consent Form- CFF study 09Jun2023.pdf
+-rw-r--r--@     1 lichard  staff        30936 Nov  2  2024 Consent_Doppler_v4.docx
+-rw-r--r--@     1 lichard  staff       332962 Mar 19  2025 Cross Pacific AI ExerciseRx full proposal - Google Docs.pdf
+-rw-r--r--@     1 lichard  staff        67400 Nov 15  2024 Cross-Pacific AI Initiative (X-PAI) ExerciseRx submission.pdf
+-rw-r--r--@     1 lichard  staff      1339071 Aug 31 09:33 DSC02566-filtered-9230.jpeg
+-rwx------@     1 lichard  staff      4394875 Aug 29 18:03 DSC02566.JPG
+-rw-r--r--@     1 lichard  staff   3166212064 Sep 18  2024 DaVinci_Resolve_19.0.1_Mac.zip
+-rw-r--r--@     1 lichard  staff     19754886 Jun  2  2025 Dell_washington_0250E_14992.pdf
+-rw-r--r--@     1 lichard  staff     33535108 Apr  9  2025 Direction.zip
+-rw-r--r--@     1 lichard  staff        44638 Oct 27  2024 Doing AI at Georgia Tech&#x27;s Master&#x27;s Program.pdf
+drwxr-xr-x      9 lichard  staff          288 Oct  7 17:25 ECE475_android_tutorial
+drwxr-xr-x      7 lichard  staff          224 Dec 10  2024 ECG_Necklace
+-rw-r--r--@     1 lichard  staff     30195283 Dec 10  2024 ECG_Necklace.zip
+drwxr-xr-x@     8 lichard  staff          256 Dec 12  2024 EE 475 - Final Deliverables
+-rw-r--r--@     1 lichard  staff    394633204 Dec 12  2024 EE 475 - Final Deliverables.zip
+drwxr-xr-x@    14 lichard  staff          448 Sep 10  2021 ESP32 UWB v1.0 Gerber
+-rw-r--r--@     1 lichard  staff        89913 Nov  8  2024 ESP32 UWB v1.0 Gerber.rar
+drwx------@     5 lichard  staff          160 Mar 11  2025 ESP32_DW3000
+-rw-r--r--@     1 lichard  staff     24849616 Mar 11  2025 ESP32_DW3000.zip
+-rw-r--r--@     1 lichard  staff      1982584 Nov  7  2024 EdwardWangResearchStatement_2020_12.pdf
+-rw-r--r--@     1 lichard  staff       511970 Oct 14 15:01 Edward_Wang-Statement_Research.pdf
+drwxr-xr-x@    10 lichard  staff          320 Nov 14  2024 EnergWatch
+-rw-r--r--@     1 lichard  staff       322044 Nov 15  2024 EnergWatch.zip
+drwxrwxrwx@    16 lichard  staff          512 Nov 21  2024 EnergWatchRev3
+-rw-r--r--@     1 lichard  staff      3775274 Nov 21  2024 EnergWatchRev3.zip
+-rw-r--r--@     1 lichard  staff       311263 Mar  4  2025 Enjoyable-1.2.zip
+drwxr-xr-x@     3 lichard  staff           96 Oct 27  2014 Enjoyable.app
+-rw-r--r--@     1 lichard  staff     11433713 May  7  2025 Epstein_washington_0250E_19042.pdf
+-rw-r--r--@     1 lichard  staff      1683561 Apr 24  2024 ExRx-CP Demo Slide.pptx
+-rw-r--r--@     1 lichard  staff       355218 May 20  2025 ExerciseRx submission to Kren Engineering-based Medicine Initiative (KEMi) Proposal Submission - Google Docs.pdf
+-rw-r--r--@     1 lichard  staff      2332857 Oct 29  2024 ExerciseRx_Affiliates_Poster_2024.pdf
+-rw-r--r--@     1 lichard  staff     27204784 Oct  8 23:48 Exquisite Leelo-Jaban.stl
+-rw-r--r--@     1 lichard  staff       185421 Jul 21 11:46 Flicker protocol updated 11Nov2022 (1).docx
+-rw-r--r--@     1 lichard  staff       185421 Feb  4  2025 Flicker protocol updated 11Nov2022.docx
+-rw-r--r--@     1 lichard  staff            0 Mar 27  2025 FootPoser_1743138334450_recording.txt
+-rw-r--r--@     1 lichard  staff        20970 Mar 27  2025 FootPoser_1743138361966_recording.txt
+-rw-r--r--@     1 lichard  staff        12838 Mar 27  2025 FootPoser_1743138653821_recording.txt
+-rw-r--r--@     1 lichard  staff        16521 Mar 27  2025 FootPoser_1743138701960_recording.txt
+-rw-r--r--@     1 lichard  staff        65787 Mar 27  2025 FootPoser_1743139014836_recording.txt
+-rw-r--r--@     1 lichard  staff     38368789 Mar 31  2025 FootPoser_1743485383277_recording.txt
+-rw-r--r--@     1 lichard  staff        71661 Apr 17  2025 FootPoser_1744941161031_recording.txt
+-rw-r--r--@     1 lichard  staff        35745 Sep 24  2024 Gerber_ProprioStrap_PCB_ProprioStrap_smoothtracks_2024-09-25.zip
+drwxrwxrwx@    15 lichard  staff          480 Nov 14  2024 Gerbers
+-rw-r--r--@     1 lichard  staff       137285 Nov 15  2024 Gerbers.zip
+-rw-r--r--@     1 lichard  staff       389023 May 30  2025 Gmail - Expedia travel confirmation - Mon, Jun 9 - (Itinerary # 72063305177955).pdf
+-rw-r--r--@     1 lichard  staff      4299150 Sep  6 18:01 HEALTH-2025-0080_Proof_hi.pdf
+-rw-r--r--@     1 lichard  staff    886213810 Jan 15  2025 HardwareCapstone_E - Group 3_Draft.mp4
+-rw-r--r--@     1 lichard  staff   1375267904 Jan 15  2025 HardwareCapstone_G - Group 4_Draft.mp4
+-rw-r--r--@     1 lichard  staff        98864 Oct  6 14:56 Health_Savings_Account_-_HealthEquity_HSA.pdf
+drwxr-xr-x@     3 lichard  staff           96 Nov 11  2024 HelloWorld
+-rw-r--r--@     1 lichard  staff         1578 Nov 11  2024 HelloWorld.zip
+-rw-r--r--@     1 lichard  staff       538693 Oct  2  2024 How_to_evaluate_technologies_for_health_behavior_change_in_HCI.pdf
+-rw-r--r--@     1 lichard  staff        36928 Aug 12 14:34 Human Subjects Protection.docx
+-rw-r--r--@     1 lichard  staff      5054758 Nov 11  2024 IMG_2707.MOV
+-rw-r--r--@     1 lichard  staff      1851985 Dec 22  2024 IMG_3059.jpg
+-rw-r--r--@     1 lichard  staff      1933081 Jul  2  2025 IMG_7898.jpg
+-rw-r--r--@     1 lichard  staff   1403057225 Nov 22  2024 IMG_8535.M4V
+-rw-r--r--@     1 lichard  staff      1152171 Feb  3  2025 IMWUT_2025_Exercise_Prescription-cindy.pdf
+-rw-r--r--@     1 lichard  staff      2902224 Feb  2  2025 IMWUT_2025_Exercise_Prescription.pdf
+-rw-r--r--@     1 lichard  staff     11263740 Dec  9  2024 IMWUT_May_2022_AcousTickBoard.pdf
+-rw-r--r--@     1 lichard  staff          464 Oct 21 06:25 INDIVCUTOFFCFF.csv
+-rw-r--r--@     1 lichard  staff      1659367 May 26  2025 ISWC_2025_AnkleSense.pdf
+-rw-r--r--@     1 lichard  staff      2345864 Sep  1 08:15 In-lab testing ExerciseRx manuscript 8-26-25 AL edits.docx
+-rw-r--r--@     1 lichard  staff      3404403 Sep  1 11:40 In-lab testing ExerciseRx manuscript 9-1-25 RL edits.docx
+-rw-r--r--@     1 lichard  staff    150438352 Feb  5  2025 Inkscape-1.4.028868_arm64.dmg
+-rw-r--r--@     1 lichard  staff       119874 Dec 13  2024 Jason_Miller_cv (1).pdf
+-rw-r--r--@     1 lichard  staff       119874 Dec 13  2024 Jason_Miller_cv.pdf
+-rw-r--r--@     1 lichard  staff        24671 Jan  7  2025 Jason_Wu-Statement_of_Purpose-CMU-2018.pdf
+-rw-r--r--@     1 lichard  staff      1029190 May 20  2025 KEMi Submission - ExerciseRX Final.pdf
+-rw-r--r--@     1 lichard  staff     16556986 May  7  2025 Karkar_washington_0250E_22018.pdf
+-rw-r--r--@     1 lichard  staff      1015615 May 20  2025 Kren_Engineering-based_Medicine_Initiative-ExerciseRx.pdf
+-rw-r--r--@     1 lichard  staff       230925 Jul 10 13:57 LONGITUDINAL_IRB.docx
+-rw-r--r--@     1 lichard  staff        43654 Jun 25  2025 LOR - RSrinivasan_Lin.docx
+-rw-r--r--@     1 lichard  staff    180879471 Jan  6  2025 Logseq-darwin-arm64-0.10.9.dmg
+-rw-r--r--@     1 lichard  staff        40260 Nov 11  2024 MYM Final APT Letter 23 Sept 2016.docx
+-rw-r--r--@     1 lichard  staff      1983667 Nov  7  2024 Mac_OSX_VCP_Driver.zip
+-rw-r--r--@     1 lichard  staff    325796399 Aug 18 09:20 Megan Hofmann  2.22.22 [qoiPaRIZuHE].webm
+-rw-r--r--@     1 lichard  staff        88771 Apr  6  2025 Merrill_2025_STMT_12312024_XXXXX917_TAXREPORTINGSTMT.pdf
+-rw-r--r--@     1 lichard  staff    181183389 Jun  8  2025 Messenger.510.0.0.1.116.dmg
+-rw-r--r--@     1 lichard  staff      8903531 Apr  9  2025 Michelle.zip
+-rw-r--r--@     1 lichard  staff       105760 Dec 22  2024 Mini-Christmas-Duet-Book-for-Two-Violins_Page_1 (1).webp
+-rw-r--r--@     1 lichard  staff       105760 Dec 22  2024 Mini-Christmas-Duet-Book-for-Two-Violins_Page_1.jpg
+-rw-r--r--@     1 lichard  staff        55305 Dec 22  2024 Mini-Christmas-Duet-Book-for-Two-Violins_Page_1.musicxml
+-rw-r--r--@     1 lichard  staff       505025 Dec 22  2024 Mini-Christmas-Duet-Book-for-Two-Violins_Page_1.pdf
+-rw-r--r--@     1 lichard  staff       105760 Dec 22  2024 Mini-Christmas-Duet-Book-for-Two-Violins_Page_1.webp
+-rw-r--r--      1 lichard  staff       849341 Dec 22  2024 Mini-Christmas-Duet-Book-for-Two-Violins_Page_1_teaser.png
+-rw-r--r--@     1 lichard  staff    154615621 Mar  7  2025 Miniconda3-latest-Linux-x86_64.sh
+-rw-r--r--@     1 lichard  staff        33287 May 20  2025 Munson Lin KEMi Final (2).xlsx - Google Sheets.pdf
+-rw-r--r--@     1 lichard  staff        42853 May 20  2025 Munson Lin KEMi Final Budget PDF.pdf
+-rw-r--r--@     1 lichard  staff     14554286 Sep 18  2024 Muse_Hub.dmg
+-rw-r--r--@     1 lichard  staff       123729 Jul 20 16:46 My recording 1 (1).m4a
+-rw-r--r--@     1 lichard  staff      5912046 Jul 20 16:30 My recording 1.m4a
+-rw-r--r--@     1 lichard  staff       580896 Jul 20 17:16 My recording 4 (1).m4a
+-rw-r--r--@     1 lichard  staff       580896 Jul 20 17:16 My recording 4.m4a
+-rw-r--r--@     1 lichard  staff        11774 May 20  2025 NIH Bio Patel.docx
+-rw-r--r--@     1 lichard  staff       114364 May 20  2025 NIH Bio Patel.docx - Google Docs.pdf
+-rw-r--r--@     1 lichard  staff      1925648 Sep 13 01:06 NSF-HCC-2551299-AI for PHI-SummaryDescriptionReferences.pdf
+-rw-r--r--@     1 lichard  staff       224803 Dec  8 10:45 NeurIPS_TS4H_2025_PPG_Distillation.pdf
+-rw-r--r--@     1 lichard  staff       252969 Dec  8 13:01 NeurIPS_TS4H_2025_PPG_Distillation.zip
+drwxr-xr-x@     5 lichard  staff          160 Aug 17 09:09 Neurips_Styles
+-rw-r--r--@     1 lichard  staff       188273 Aug 17 09:09 Neurips_Styles.zip
+-rw-r--r--@     1 lichard  staff       586863 Jul  3  2025 Non-employee-travel-form-CURRENT.pdf
+-rw-r--r--@     1 lichard  staff        57116 Oct 29  2024 NonEmployee Travel Reimbursement Form 2024 (04.24).xlsx
+-rw-r--r--@     1 lichard  staff         1698 Jul 31 17:45 Nymeria_v0.0_20230929_s1_alan_burns_act3_dxzzwb_narration_activity_summarization.csv
+-rw-r--r--@     1 lichard  staff        78215 Jul 31 17:45 Nymeria_v0.0_20230929_s1_alan_burns_act3_dxzzwb_narration_atomic_action.csv
+-rw-r--r--@     1 lichard  staff       148132 Jul 31 17:45 Nymeria_v0.0_20230929_s1_alan_burns_act3_dxzzwb_narration_motion_narration (1).csv
+-rw-r--r--@     1 lichard  staff       148132 Jul 31 17:45 Nymeria_v0.0_20230929_s1_alan_burns_act3_dxzzwb_narration_motion_narration.csv
+-rw-r--r--@     1 lichard  staff    194223073 Nov 14  2024 Ollama-darwin.zip
+drwxr-xr-x@     3 lichard  staff           96 Nov  8  2024 Ollama.app
+-rw-r--r--@     1 lichard  staff       683384 Feb 18  2025 OptiTrack Ground Plane CS-200.stl
+-rw-r--r--@     1 lichard  staff       126964 Jul 12 11:58 P1.vtt
+-rw-r--r--@     1 lichard  staff        83329 Jul 12 11:59 P10.vtt
+-rw-r--r--@     1 lichard  staff        64410 Jul 12 11:59 P13.vtt
+-rw-r--r--@     1 lichard  staff        41184 Jul 12 12:01 P14.vtt
+-rw-r--r--@     1 lichard  staff        21296 Jul 12 12:02 P15a.vtt
+-rw-r--r--@     1 lichard  staff        33633 Jul 12 12:02 P15b.vtt
+-rw-r--r--@     1 lichard  staff        80823 Jul 12 12:02 P16.vtt
+-rw-r--r--@     1 lichard  staff        45484 Jul 12 12:02 P18.vtt
+-rw-r--r--@     1 lichard  staff        95275 Jul 12 11:58 P2.vtt
+-rw-r--r--@     1 lichard  staff        74018 Jul 12 12:02 P20.vtt
+-rw-r--r--@     1 lichard  staff        62432 Jul 12 12:02 P22.vtt
+-rw-r--r--@     1 lichard  staff        92010 Jul 12 11:58 P3.vtt
+-rw-r--r--@     1 lichard  staff        95293 Jul 12 11:58 P4.vtt
+-rw-r--r--@     1 lichard  staff       104694 Jul 12 11:58 P5.vtt
+-rw-r--r--@     1 lichard  staff        51327 Jul 12 11:59 P7.vtt
+-rw-r--r--@     1 lichard  staff        89547 Jul 12 11:59 P8.vtt
+-rw-r--r--@     1 lichard  staff       264046 Mar 26  2025 PXL_20250106_020649841.jpg
+-rw-r--r--@     1 lichard  staff       361045 Aug 27 01:36 PXL_20250813_210648891.RAW-01.COVER.jpg
+-rwxr-----@     1 lichard  staff     99151675 Aug 28 17:04 PXL_20250829_000345282.TS.mp4
+-rw-r--r--@     1 lichard  staff       450387 Jan 23  2025 PoseGravity_ Pose Estimation from Points and Lines with Axis Prior _ OpenReview.pdf
+-rw-r--r--@     1 lichard  staff      1268752 Feb 22  2025 Printable_Flexible_Robots_for_
+
+... [489 lines truncated] ...</pre></div><button class="expand-btn">Show more</button></div></div></div></div>
+<div class="message assistant" id="msg-2026-01-06T09-20-10-759Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-01-06T09-20-10-759Z" class="timestamp-link"><time datetime="2026-01-06T09:20:10.759Z" data-timestamp="2026-01-06T09:20:10.759Z">2026-01-06T09:20:10.759Z</time></a></div><div class="message-content">
+<div class="thinking"><div class="thinking-label">Thinking</div><p>The directory listing is quite long and contains many files. I need to find a project that has "background" and "pieces" - this sounds like a chess game or similar board game. Let me look for HTML, CSS, or JavaScript files that might be related to a game with a board and pieces.</p>
+<p>Let me search for HTML files or game-related files:</p></div></div></div>
+<div class="message assistant" id="msg-2026-01-06T09-20-11-372Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-01-06T09-20-11-372Z" class="timestamp-link"><time datetime="2026-01-06T09:20:11.372Z" data-timestamp="2026-01-06T09:20:11.372Z">2026-01-06T09:20:11.372Z</time></a></div><div class="message-content">
+<div class="assistant-text"><p>Let me search for files that might contain a game or visual project with pieces:</p></div></div></div>
+<div class="message assistant" id="msg-2026-01-06T09-20-11-784Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-01-06T09-20-11-784Z" class="timestamp-link"><time datetime="2026-01-06T09:20:11.784Z" data-timestamp="2026-01-06T09:20:11.784Z">2026-01-06T09:20:11.784Z</time></a></div><div class="message-content">
+<div class="tool-use" data-tool-id="toolu_01E93V9hPqFXEYGrQoXHuNDa"><div class="tool-header"><span class="tool-icon">⚙</span> Glob</div><div class="truncatable"><div class="truncatable-content"><pre class="json">{
+  &#34;pattern&#34;: &#34;*.html&#34;
+}</pre></div><button class="expand-btn">Show more</button></div></div></div></div>
+<div class="message assistant" id="msg-2026-01-06T09-20-12-092Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-01-06T09-20-12-092Z" class="timestamp-link"><time datetime="2026-01-06T09:20:12.092Z" data-timestamp="2026-01-06T09:20:12.092Z">2026-01-06T09:20:12.092Z</time></a></div><div class="message-content">
+<div class="tool-use" data-tool-id="toolu_018Z7vA9oY1VjsxJAowM6CaQ"><div class="tool-header"><span class="tool-icon">⚙</span> Glob</div><div class="truncatable"><div class="truncatable-content"><pre class="json">{
+  &#34;pattern&#34;: &#34;*.css&#34;
+}</pre></div><button class="expand-btn">Show more</button></div></div></div></div>
+<div class="message tool-reply" id="msg-2026-01-06T09-20-12-911Z"><div class="message-header"><span class="role-label">Tool reply</span><a href="#msg-2026-01-06T09-20-12-911Z" class="timestamp-link"><time datetime="2026-01-06T09:20:12.911Z" data-timestamp="2026-01-06T09:20:12.911Z">2026-01-06T09:20:12.911Z</time></a></div><div class="message-content"><div class="tool-result"><div class="truncatable"><div class="truncatable-content"><pre>/Users/lichard/Downloads/Enjoyable.app/Contents/Resources/Help/Contents/Resources/English.lproj/sty/default.css
+/Users/lichard/Downloads/beacon/static/dual_style.css
+/Users/lichard/Downloads/beacon/static/singlestyle.css
+/Users/lichard/Downloads/two_headed_beacon/static/home.css
+/Users/lichard/Downloads/two_headed_beacon/static/dual_style.css
+/Users/lichard/Downloads/two_headed_beacon/static/single_style.css
+/Users/lichard/Downloads/a2 form/Login - a2 Collective_files/5931.217f82a6213eec20cf95.css
+/Users/lichard/Downloads/a2 form/Login - a2 Collective_files/816.25603fea8b5d86ef40d5.css
+/Users/lichard/Downloads/a2 form/Login - a2 Collective_files/345.8ad5c2b6b8a58adc0775.css
+/Users/lichard/Downloads/a2 form/Login - a2 Collective_files/6319.8cd212599bba55e9cbf9.css
+/Users/lichard/Downloads/a2 form/Login - a2 Collective_files/8839.d746825948dc00492ab1.css
+/Users/lichard/Downloads/a2 form/Login - a2 Collective_files/8487.1a15230843fea13c6104.css
+/Users/lichard/Downloads/a2 form/Login - a2 Collective_files/5521.a5b2299028d5823de2b8.css
+/Users/lichard/Downloads/a2 form/Login - a2 Collective_files/2393.21b3912b695642d6b06d.css
+/Users/lichard/Downloads/a2 form/Login - a2 Collective_files/main.030d703603ed82323b4d.css
+/Users/lichard/Downloads/a2 form/Login - a2 Collective_files/7071.4fbf4aefc23682c0d3a6.css
+/Users/lichard/Downloads/two_headed_beacon_pilot/frontend/src/index.css
+/Users/lichard/Downloads/two_headed_beacon_pilot/frontend/node_modules/bootstrap/dist/css/bootstrap-grid.min.css
+/Users/lichard/Downloads/two_headed_beacon_pilot/frontend/node_modules/bootstrap/dist/css/bootstrap-grid.css
+/Users/lichard/Downloads/two_headed_beacon_pilot/frontend/node_modules/bootstrap/dist/css/bootstrap-grid.rtl.css
+/Users/lichard/Downloads/two_headed_beacon_pilot/frontend/node_modules/bootstrap/dist/css/bootstrap.min.css
+/Users/lichard/Downloads/two_headed_beacon_pilot/frontend/node_modules/bootstrap/dist/css/bootstrap-grid.rtl.min.css
+/Users/lichard/Downloads/two_headed_beacon_pilot/frontend/node_modules/bootstrap/dist/css/bootstrap-utilities.rtl.css
+/Users/lichard/Downloads/two_headed_beacon_pilot/frontend/node_modules/bootstrap/dist/css/bootstrap-reboot.rtl.css
+/Users/lichard/Downloads/two_headed_beacon_pilot/frontend/node_modules/bootstrap/dist/css/bootstrap-utilities.css
+/Users/lichard/Downloads/two_headed_beacon_pilot/frontend/node_modules/bootstrap/dist/css/bootstrap.css
+/Users/lichard/Downloads/two_headed_beacon_pilot/frontend/node_modules/bootstrap/dist/css/bootstrap.rtl.min.css
+/Users/lichard/Downloads/two_headed_beacon_pilot/frontend/node_modules/bootstrap/dist/css/bootstrap-reboot.min.css
+/Users/lichard/Downloads/two_headed_beacon_pilot/frontend/node_modules/bootstrap/dist/css/bootstrap.rtl.css
+/Users/lichard/Downloads/two_headed_beacon_pilot/frontend/node_modules/bootstrap/dist/css/bootstrap-reboot.css
+/Users/lichard/Downloads/two_headed_beacon_pilot/frontend/node_modules/bootstrap/dist/css/bootstrap-utilities.min.css
+/Users/lichard/Downloads/two_headed_beacon_pilot/frontend/node_modules/bootstrap/dist/css/bootstrap-utilities.rtl.min.css
+/Users/lichard/Downloads/two_headed_beacon_pilot/frontend/node_modules/bootstrap/dist/css/bootstrap-reboot.rtl.min.css
+/Users/lichard/Downloads/two_headed_beacon_pilot/frontend/src/pages/Descend.css
+/Users/lichard/Downloads/two_headed_beacon_pilot/frontend/src/App.css
+/Users/lichard/Downloads/two_headed_beacon_pilot/frontend/src/pages/Ascend.css
+/Users/lichard/Downloads/two_headed_beacon_pilot/frontend/src/pages/Dual.css
+/Users/lichard/Downloads/two_headed_beacon_pilot/frontend/src/pages/Single.css</pre></div><button class="expand-btn">Show more</button></div></div></div></div>
+<div class="message tool-reply" id="msg-2026-01-06T09-20-12-915Z"><div class="message-header"><span class="role-label">Tool reply</span><a href="#msg-2026-01-06T09-20-12-915Z" class="timestamp-link"><time datetime="2026-01-06T09:20:12.915Z" data-timestamp="2026-01-06T09:20:12.915Z">2026-01-06T09:20:12.915Z</time></a></div><div class="message-content"><div class="tool-result"><div class="truncatable"><div class="truncatable-content"><pre>/Users/lichard/Downloads/Enjoyable.app/Contents/Resources/Help/Contents/Resources/English.lproj/index.html
+/Users/lichard/Downloads/Enjoyable.app/Contents/Resources/Help/Contents/Resources/English.lproj/pgs/mouse.html
+/Users/lichard/Downloads/Enjoyable.app/Contents/Resources/Help/Contents/Resources/English.lproj/pgs/boring.html
+/Users/lichard/Downloads/Enjoyable.app/Contents/Resources/Help/Contents/Resources/English.lproj/pgs/whatsnew.html
+/Users/lichard/Downloads/Enjoyable.app/Contents/Resources/Help/Contents/Resources/English.lproj/pgs/mappings.html
+/Users/lichard/Downloads/Enjoyable.app/Contents/Resources/Help/Contents/Resources/English.lproj/pgs/keyboard.html
+/Users/lichard/Downloads/Enjoyable.app/Contents/Resources/Help/Contents/Resources/English.lproj/pgs/problems.html
+/Users/lichard/Downloads/Takeout/archive_browser.html
+/Users/lichard/Downloads/beacon/templates/single_buttons.html
+/Users/lichard/Downloads/beacon/templates/dual_buttons.html
+/Users/lichard/Downloads/two_headed_beacon/templates/home.html
+/Users/lichard/Downloads/two_headed_beacon/templates/dual_buttons.html
+/Users/lichard/Downloads/two_headed_beacon/templates/single_buttons.html
+/Users/lichard/Downloads/usb-scale-master (1)/usb-scale-master/example.html
+/Users/lichard/Downloads/usb-scale-master (1)/usb-scale-master/templates/index.html
+/Users/lichard/Downloads/two_headed_beacon_pilot/frontend/index.html
+/Users/lichard/Downloads/two_headed_beacon_pilot/frontend/node_modules/tslib/tslib.es6.html
+/Users/lichard/Downloads/two_headed_beacon_pilot/frontend/node_modules/tslib/tslib.html
+/Users/lichard/Downloads/weather-chart.html
+/Users/lichard/Downloads/mug-detector.html
+/Users/lichard/Downloads/music-practice-planner.html
+/Users/lichard/Downloads/connect4.html</pre></div><button class="expand-btn">Show more</button></div></div></div></div>
+<div class="message user" id="msg-2026-01-06T09-20-15-503Z"><div class="message-header"><span class="role-label">User</span><a href="#msg-2026-01-06T09-20-15-503Z" class="timestamp-link"><time datetime="2026-01-06T09:20:15.503Z" data-timestamp="2026-01-06T09:20:15.503Z">2026-01-06T09:20:15.503Z</time></a></div><div class="message-content">
+<div class="assistant-text"><p>[Request interrupted by user]</p></div></div></div>
+        
+
+<div class="pagination">
+<a href="index.html" class="index-link">Index</a>
+<span class="disabled">&larr; Prev</span>
+<span class="current">1</span>
+<a href="page-002.html">2</a>
+<a href="page-002.html">Next &rarr;</a>
+</div>
+
+    </div>
+    <script>
+document.querySelectorAll('time[data-timestamp]').forEach(function(el) {
+    const timestamp = el.getAttribute('data-timestamp');
+    const date = new Date(timestamp);
+    const now = new Date();
+    const isToday = date.toDateString() === now.toDateString();
+    const timeStr = date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    if (isToday) { el.textContent = timeStr; }
+    else { el.textContent = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' ' + timeStr; }
+});
+document.querySelectorAll('pre.json').forEach(function(el) {
+    let text = el.textContent;
+    text = text.replace(/"([^"]+)":/g, '<span style="color: #ce93d8">"$1"</span>:');
+    text = text.replace(/: "([^"]*)"/g, ': <span style="color: #81d4fa">"$1"</span>');
+    text = text.replace(/: (\d+)/g, ': <span style="color: #ffcc80">$1</span>');
+    text = text.replace(/: (true|false|null)/g, ': <span style="color: #f48fb1">$1</span>');
+    el.innerHTML = text;
+});
+document.querySelectorAll('.truncatable').forEach(function(wrapper) {
+    const content = wrapper.querySelector('.truncatable-content');
+    const btn = wrapper.querySelector('.expand-btn');
+    if (content.scrollHeight > 250) {
+        wrapper.classList.add('truncated');
+        btn.addEventListener('click', function() {
+            if (wrapper.classList.contains('truncated')) { wrapper.classList.remove('truncated'); wrapper.classList.add('expanded'); btn.textContent = 'Show less'; }
+            else { wrapper.classList.remove('expanded'); wrapper.classList.add('truncated'); btn.textContent = 'Show more'; }
+        });
+    }
+});
+</script>
+</body>
+</html>

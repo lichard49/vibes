@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connect 4</title>
     <style>
+        :root {
+            --cell-size: 60px;
+            --cell-margin: 4px;
+            --cell-total: calc(var(--cell-size) + var(--cell-margin) * 2);
+        }
         * {
             box-sizing: border-box;
         }
@@ -16,35 +21,39 @@
             justify-content: center;
             min-height: 100vh;
             margin: 0;
+            padding: 10px;
             background: black;
             color: white;
         }
         h1 {
             margin-bottom: 10px;
+            font-size: clamp(1.5rem, 5vw, 2rem);
         }
         #status {
-            font-size: 1.5rem;
-            margin-bottom: 20px;
-            padding: 10px 20px;
+            font-size: clamp(1rem, 4vw, 1.5rem);
+            margin-bottom: 15px;
+            padding: 8px 16px;
             border-radius: 8px;
             background: rgba(255,255,255,0.1);
+            text-align: center;
         }
         #status .red { color: #ff6b6b; }
         #status .black { color: #fff; }
         #board {
             background: #0066cc;
-            padding: 10px;
+            padding: clamp(6px, 2vw, 10px);
             border-radius: 10px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
             overflow: hidden;
+            max-width: 100%;
         }
         .row {
             display: flex;
         }
         .cell {
-            width: 60px;
-            height: 60px;
-            margin: 4px;
+            width: var(--cell-size);
+            height: var(--cell-size);
+            margin: var(--cell-margin);
             border-radius: 50%;
             background: black;
             cursor: pointer;
@@ -73,7 +82,7 @@
         }
         @keyframes drop {
             from {
-                transform: translateY(calc(-68px * (var(--drop-distance) + 1)));
+                transform: translateY(calc(var(--cell-total) * -1 * (var(--drop-distance) + 1)));
             }
             to {
                 transform: translateY(0);
@@ -97,9 +106,9 @@
         }
         #scoreboard {
             display: flex;
-            gap: 40px;
+            gap: clamp(20px, 5vw, 40px);
             margin-bottom: 15px;
-            font-size: 1.2rem;
+            font-size: clamp(1rem, 3vw, 1.2rem);
         }
         .score {
             display: flex;
@@ -118,9 +127,25 @@
             min-width: 20px;
         }
         #timer {
-            font-size: 1.1rem;
+            font-size: clamp(0.9rem, 3vw, 1.1rem);
             margin-bottom: 10px;
             color: #aaa;
+        }
+
+        /* Mobile responsive - scale cells based on viewport */
+        @media (max-width: 520px) {
+            :root {
+                --cell-size: calc((100vw - 40px) / 7 - 8px);
+                --cell-margin: 3px;
+            }
+        }
+
+        /* Very small screens */
+        @media (max-width: 360px) {
+            :root {
+                --cell-margin: 2px;
+                --cell-size: calc((100vw - 30px) / 7 - 4px);
+            }
         }
     </style>
 </head>

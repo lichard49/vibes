@@ -554,9 +554,7 @@
                     receiveMove(data.col);
                     break;
                 case 'restart':
-                    // Opponent confirmed restart
-                    resetBoard();
-                    showDialog('Opponent restarted the game');
+                    // Opponent confirmed restart - no action needed since we already reset
                     break;
                 case 'restart-request':
                     // Opponent wants to restart, auto-accept

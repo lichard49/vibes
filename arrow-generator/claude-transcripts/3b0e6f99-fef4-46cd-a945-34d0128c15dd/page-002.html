@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code transcript - page 2</title>
+    <style>
+:root { --bg-color: #f5f5f5; --card-bg: #ffffff; --user-bg: #e3f2fd; --user-border: #1976d2; --assistant-bg: #f5f5f5; --assistant-border: #9e9e9e; --thinking-bg: #fff8e1; --thinking-border: #ffc107; --thinking-text: #666; --tool-bg: #f3e5f5; --tool-border: #9c27b0; --tool-result-bg: #e8f5e9; --tool-error-bg: #ffebee; --text-color: #212121; --text-muted: #757575; --code-bg: #263238; --code-text: #aed581; }
+* { box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg-color); color: var(--text-color); margin: 0; padding: 16px; line-height: 1.6; }
+.container { max-width: 800px; margin: 0 auto; }
+h1 { font-size: 1.5rem; margin-bottom: 24px; padding-bottom: 8px; border-bottom: 2px solid var(--user-border); }
+.header-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 2px solid var(--user-border); padding-bottom: 8px; margin-bottom: 24px; }
+.header-row h1 { border-bottom: none; padding-bottom: 0; margin-bottom: 0; flex: 1; min-width: 200px; }
+.message { margin-bottom: 16px; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.message.user { background: var(--user-bg); border-left: 4px solid var(--user-border); }
+.message.assistant { background: var(--card-bg); border-left: 4px solid var(--assistant-border); }
+.message.tool-reply { background: #fff8e1; border-left: 4px solid #ff9800; }
+.tool-reply .role-label { color: #e65100; }
+.tool-reply .tool-result { background: transparent; padding: 0; margin: 0; }
+.tool-reply .tool-result .truncatable.truncated::after { background: linear-gradient(to bottom, transparent, #fff8e1); }
+.message-header { display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; background: rgba(0,0,0,0.03); font-size: 0.85rem; }
+.role-label { font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.user .role-label { color: var(--user-border); }
+time { color: var(--text-muted); font-size: 0.8rem; }
+.timestamp-link { color: inherit; text-decoration: none; }
+.timestamp-link:hover { text-decoration: underline; }
+.message:target { animation: highlight 2s ease-out; }
+@keyframes highlight { 0% { background-color: rgba(25, 118, 210, 0.2); } 100% { background-color: transparent; } }
+.message-content { padding: 16px; }
+.message-content p { margin: 0 0 12px 0; }
+.message-content p:last-child { margin-bottom: 0; }
+.thinking { background: var(--thinking-bg); border: 1px solid var(--thinking-border); border-radius: 8px; padding: 12px; margin: 12px 0; font-size: 0.9rem; color: var(--thinking-text); }
+.thinking-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #f57c00; margin-bottom: 8px; }
+.thinking p { margin: 8px 0; }
+.assistant-text { margin: 8px 0; }
+.tool-use { background: var(--tool-bg); border: 1px solid var(--tool-border); border-radius: 8px; padding: 12px; margin: 12px 0; }
+.tool-header { font-weight: 600; color: var(--tool-border); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.tool-icon { font-size: 1.1rem; }
+.tool-description { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 8px; font-style: italic; }
+.tool-result { background: var(--tool-result-bg); border-radius: 8px; padding: 12px; margin: 12px 0; }
+.tool-result.tool-error { background: var(--tool-error-bg); }
+.file-tool { border-radius: 8px; padding: 12px; margin: 12px 0; }
+.write-tool { background: linear-gradient(135deg, #e3f2fd 0%, #e8f5e9 100%); border: 1px solid #4caf50; }
+.edit-tool { background: linear-gradient(135deg, #fff3e0 0%, #fce4ec 100%); border: 1px solid #ff9800; }
+.file-tool-header { font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; font-size: 0.95rem; }
+.write-header { color: #2e7d32; }
+.edit-header { color: #e65100; }
+.file-tool-icon { font-size: 1rem; }
+.file-tool-path { font-family: monospace; background: rgba(0,0,0,0.08); padding: 2px 8px; border-radius: 4px; }
+.file-tool-fullpath { font-family: monospace; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; word-break: break-all; }
+.file-content { margin: 0; }
+.edit-section { display: flex; margin: 4px 0; border-radius: 4px; overflow: hidden; }
+.edit-label { padding: 8px 12px; font-weight: bold; font-family: monospace; display: flex; align-items: flex-start; }
+.edit-old { background: #fce4ec; }
+.edit-old .edit-label { color: #b71c1c; background: #f8bbd9; }
+.edit-old .edit-content { color: #880e4f; }
+.edit-new { background: #e8f5e9; }
+.edit-new .edit-label { color: #1b5e20; background: #a5d6a7; }
+.edit-new .edit-content { color: #1b5e20; }
+.edit-content { margin: 0; flex: 1; background: transparent; font-size: 0.85rem; }
+.edit-replace-all { font-size: 0.75rem; font-weight: normal; color: var(--text-muted); }
+.write-tool .truncatable.truncated::after { background: linear-gradient(to bottom, transparent, #e6f4ea); }
+.edit-tool .truncatable.truncated::after { background: linear-gradient(to bottom, transparent, #fff0e5); }
+.todo-list { background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%); border: 1px solid #81c784; border-radius: 8px; padding: 12px; margin: 12px 0; }
+.todo-header { font-weight: 600; color: #2e7d32; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; font-size: 0.95rem; }
+.todo-items { list-style: none; margin: 0; padding: 0; }
+.todo-item { display: flex; align-items: flex-start; gap: 10px; padding: 6px 0; border-bottom: 1px solid rgba(0,0,0,0.06); font-size: 0.9rem; }
+.todo-item:last-child { border-bottom: none; }
+.todo-icon { flex-shrink: 0; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-weight: bold; border-radius: 50%; }
+.todo-completed .todo-icon { color: #2e7d32; background: rgba(46, 125, 50, 0.15); }
+.todo-completed .todo-content { color: #558b2f; text-decoration: line-through; }
+.todo-in-progress .todo-icon { color: #f57c00; background: rgba(245, 124, 0, 0.15); }
+.todo-in-progress .todo-content { color: #e65100; font-weight: 500; }
+.todo-pending .todo-icon { color: #757575; background: rgba(0,0,0,0.05); }
+.todo-pending .todo-content { color: #616161; }
+pre { background: var(--code-bg); color: var(--code-text); padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.85rem; line-height: 1.5; margin: 8px 0; white-space: pre-wrap; word-wrap: break-word; }
+pre.json { color: #e0e0e0; }
+code { background: rgba(0,0,0,0.08); padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+pre code { background: none; padding: 0; }
+.user-content { margin: 0; }
+.truncatable { position: relative; }
+.truncatable.truncated .truncatable-content { max-height: 200px; overflow: hidden; }
+.truncatable.truncated::after { content: ''; position: absolute; bottom: 32px; left: 0; right: 0; height: 60px; background: linear-gradient(to bottom, transparent, var(--card-bg)); pointer-events: none; }
+.message.user .truncatable.truncated::after { background: linear-gradient(to bottom, transparent, var(--user-bg)); }
+.message.tool-reply .truncatable.truncated::after { background: linear-gradient(to bottom, transparent, #fff8e1); }
+.tool-use .truncatable.truncated::after { background: linear-gradient(to bottom, transparent, var(--tool-bg)); }
+.tool-result .truncatable.truncated::after { background: linear-gradient(to bottom, transparent, var(--tool-result-bg)); }
+.expand-btn { display: none; width: 100%; padding: 8px 16px; margin-top: 4px; background: rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.1); border-radius: 6px; cursor: pointer; font-size: 0.85rem; color: var(--text-muted); }
+.expand-btn:hover { background: rgba(0,0,0,0.1); }
+.truncatable.truncated .expand-btn, .truncatable.expanded .expand-btn { display: block; }
+.pagination { display: flex; justify-content: center; gap: 8px; margin: 24px 0; flex-wrap: wrap; }
+.pagination a, .pagination span { padding: 5px 10px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; }
+.pagination a { background: var(--card-bg); color: var(--user-border); border: 1px solid var(--user-border); }
+.pagination a:hover { background: var(--user-bg); }
+.pagination .current { background: var(--user-border); color: white; }
+.pagination .disabled { color: var(--text-muted); border: 1px solid #ddd; }
+.pagination .index-link { background: var(--user-border); color: white; }
+details.continuation { margin-bottom: 16px; }
+details.continuation summary { cursor: pointer; padding: 12px 16px; background: var(--user-bg); border-left: 4px solid var(--user-border); border-radius: 12px; font-weight: 500; color: var(--text-muted); }
+details.continuation summary:hover { background: rgba(25, 118, 210, 0.15); }
+details.continuation[open] summary { border-radius: 12px 12px 0 0; margin-bottom: 0; }
+.index-item { margin-bottom: 16px; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); background: var(--user-bg); border-left: 4px solid var(--user-border); }
+.index-item a { display: block; text-decoration: none; color: inherit; }
+.index-item a:hover { background: rgba(25, 118, 210, 0.1); }
+.index-item-header { display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; background: rgba(0,0,0,0.03); font-size: 0.85rem; }
+.index-item-number { font-weight: 600; color: var(--user-border); }
+.index-item-content { padding: 16px; }
+.index-item-stats { padding: 8px 16px 12px 32px; font-size: 0.85rem; color: var(--text-muted); border-top: 1px solid rgba(0,0,0,0.06); }
+.index-item-commit { margin-top: 6px; padding: 4px 8px; background: #fff3e0; border-radius: 4px; font-size: 0.85rem; color: #e65100; }
+.index-item-commit code { background: rgba(0,0,0,0.08); padding: 1px 4px; border-radius: 3px; font-size: 0.8rem; margin-right: 6px; }
+.commit-card { margin: 8px 0; padding: 10px 14px; background: #fff3e0; border-left: 4px solid #ff9800; border-radius: 6px; }
+.commit-card a { text-decoration: none; color: #5d4037; display: block; }
+.commit-card a:hover { color: #e65100; }
+.commit-card-hash { font-family: monospace; color: #e65100; font-weight: 600; margin-right: 8px; }
+.index-commit { margin-bottom: 12px; padding: 10px 16px; background: #fff3e0; border-left: 4px solid #ff9800; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+.index-commit a { display: block; text-decoration: none; color: inherit; }
+.index-commit a:hover { background: rgba(255, 152, 0, 0.1); margin: -10px -16px; padding: 10px 16px; border-radius: 8px; }
+.index-commit-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; margin-bottom: 4px; }
+.index-commit-hash { font-family: monospace; color: #e65100; font-weight: 600; }
+.index-commit-msg { color: #5d4037; }
+.index-item-long-text { margin-top: 8px; padding: 12px; background: var(--card-bg); border-radius: 8px; border-left: 3px solid var(--assistant-border); }
+.index-item-long-text .truncatable.truncated::after { background: linear-gradient(to bottom, transparent, var(--card-bg)); }
+.index-item-long-text-content { color: var(--text-color); }
+#search-box { display: none; align-items: center; gap: 8px; }
+#search-box input { padding: 6px 12px; border: 1px solid var(--assistant-border); border-radius: 6px; font-size: 16px; width: 180px; }
+#search-box button, #modal-search-btn, #modal-close-btn { background: var(--user-border); color: white; border: none; border-radius: 6px; padding: 6px 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+#search-box button:hover, #modal-search-btn:hover { background: #1565c0; }
+#modal-close-btn { background: var(--text-muted); margin-left: 8px; }
+#modal-close-btn:hover { background: #616161; }
+#search-modal[open] { border: none; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.2); padding: 0; width: 90vw; max-width: 900px; height: 80vh; max-height: 80vh; display: flex; flex-direction: column; }
+#search-modal::backdrop { background: rgba(0,0,0,0.5); }
+.search-modal-header { display: flex; align-items: center; gap: 8px; padding: 16px; border-bottom: 1px solid var(--assistant-border); background: var(--bg-color); border-radius: 12px 12px 0 0; }
+.search-modal-header input { flex: 1; padding: 8px 12px; border: 1px solid var(--assistant-border); border-radius: 6px; font-size: 16px; }
+#search-status { padding: 8px 16px; font-size: 0.85rem; color: var(--text-muted); border-bottom: 1px solid rgba(0,0,0,0.06); }
+#search-results { flex: 1; overflow-y: auto; padding: 16px; }
+.search-result { margin-bottom: 16px; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.search-result a { display: block; text-decoration: none; color: inherit; }
+.search-result a:hover { background: rgba(25, 118, 210, 0.05); }
+.search-result-page { padding: 6px 12px; background: rgba(0,0,0,0.03); font-size: 0.8rem; color: var(--text-muted); border-bottom: 1px solid rgba(0,0,0,0.06); }
+.search-result-content { padding: 12px; }
+.search-result mark { background: #fff59d; padding: 1px 2px; border-radius: 2px; }
+@media (max-width: 600px) { body { padding: 8px; } .message, .index-item { border-radius: 8px; } .message-content, .index-item-content { padding: 12px; } pre { font-size: 0.8rem; padding: 8px; } #search-box input { width: 120px; } #search-modal[open] { width: 95vw; height: 90vh; } }
+</style>
+</head>
+<body>
+    <div class="container">
+        <h1><a href="index.html" style="color: inherit; text-decoration: none;">Claude Code transcript</a> - page 2/3</h1>
+        
+
+<div class="pagination">
+<a href="index.html" class="index-link">Index</a>
+<a href="page-001.html">&larr; Prev</a>
+<a href="page-001.html">1</a>
+<span class="current">2</span>
+<a href="page-003.html">3</a>
+<a href="page-003.html">Next &rarr;</a>
+</div>
+
+        
+<div class="message user" id="msg-2026-02-05T08-04-20-442Z"><div class="message-header"><span class="role-label">User</span><a href="#msg-2026-02-05T08-04-20-442Z" class="timestamp-link"><time datetime="2026-02-05T08:04:20.442Z" data-timestamp="2026-02-05T08:04:20.442Z">2026-02-05T08:04:20.442Z</time></a></div><div class="message-content">
+<div class="assistant-text"><p>that did not fix it :( here are some examples of what it looks like. the arrowheads are in the wrong place.</p></div>
+<div class="image-block"><img src="data:image/png;base64,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BCJAZIHCVAoCCCCQkQCRZUxdzQgggEAgAkQWKEylIIAAAhkJEFnG1NWMAAIIBCJAZIHCVAoCCCCQkQCRZUxdzQgggEAgAkQWKEylIIAAAhkJEFnG1NWMAAIIBCJAZIHCVAoCCCCQkQCRZUxdzQgggEAgAkQWKEylIIAAAhkJEFnG1NWMAAIIBCJAZIHCVAoCCCCQkQCRZUxdzQgggEAgAkQWKEylIIAAAhkJEFnG1NWMAAIIBCJAZIHCVAoCCCCQkQCRZUxdzQgggEAgAkQWKEylIIAAAhkJEFnG1NWMAAIIBCJAZIHCVAoCCCCQkQCRZUxdzQgggEAgAkQWKEylIIAAAhkJEFnG1NWMAAIIBCJAZIHCVAoCCCCQkQCRZUxdzQgggEAgAkQWKEylIIAAAhkJEFnG1NWMAAIIBCJAZIHCVAoCCCCQkQCRZUxdzQgggEAgAkQWKEylIIAAAhkJEFnG1NWMAAIIBCJAZIHCVAoCCCCQkQCRZUxdzQgggEAgAkQWKEylIIAAAhkJEFnG1NWMAAIIBCJAZIHCVAoCCCCQkQCRZUxdzQgggEAgAkQWKEylIIAAAhkJEFnG1NWMAAIIBCJAZIHCVAoCCCCQkQCRZUxdzQgggEAgAkQWKEylIIAAAhkJEFnG1NWMAAIIBCJAZIHCVAoCCCCQkQCRZUxdzQgggEAgAkQWKEylIIAAAhkJEFnG1NWMAAIIBCJAZIHCVAoCCCCQkcBP1xOhgiqOly8AAAAASUVORK5CYII=" style="max-width: 100%"></div>
+<div class="image-block"><img src="data:image/png;base64,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AQIECBAIExDQwhqiHAIECBAgQICAgGYOECBAgAABAgTCBAS0sIYohwABAgQIECAgoJkDBAgQIECAAIEwAQEtrCHKIUCAAAECBAgIaOYAAQIECBAgQCBMQEALa4hyCBAgQIAAAQICmjlAgAABAgQIEAgTENDCGqIcAgQIECBAgICAZg4QIECAAAECBMIEBLSwhiiHAAECBAgQICCgmQMECBAgQIAAgTABAS2sIcohQIAAAQIECAho5gABAgQIECBAIExAQAtriHIIECBAgAABAgKaOUCAAAECBAgQCBMQ0MIaohwCBAgQIECAgIBmDhAgQIAAAQIEwgQEtLCGKIcAAQIECBAgIKCZAwQIECBAgACBMAEBLawhyiFAgAABAgQICGjmAAECBAgQIEAgTEBAC2uIcggQIECAAAECApo5QIAAAQIECBAIExDQwhqiHAIECBAgQICAgGYOECBAgAABAgTCBAS0sIYohwABAgQIECAgoJkDBAgQIECAAIEwAQEtrCHKIUCAAAECBAgIaOYAAQIECBAgQCBMQEALa4hyCBAgQIAAAQICmjlAgAABAgQIEAgTENDCGqIcAgQIECBAgICAZg4QIECAAAECBMIEBLSwhiiHAAECBAgQICCgmQMECBAgQIAAgTABAS2sIcohQIAAAQIECAho5gABAgQIECBAIExAQAtriHIIECBAgAABAgKaOUCAAAECBAgQCBMQ0MIaohwCBAgQIECAgIBmDhAgQIAAAQIEwgQEtLCGKIcAAQIECBAgIKCZAwQIECBAgACBMAEBLawhyiFAgAABAgQICGjmAAECBAgQIEAgTEBAC2uIcggQIECAAAECApo5QIAAAQIECBAIExDQwhqiHAIECBAgQICAgHbQOXD/x19D5Xefbq+uf7y5ev3u7UFfibIJECBAgACBcwEB7VwkdLsFsuHP56/3p2V+9/uvp5u+JkCAAAECBA4uIKAFNvD07Fgrr7bHSm1nzt58/DD2LY8RIECAAAECBxUQ0HZuXIWvtlTZbrU9tay2vHn9/mbq7vYjQIAAAQIEDiAgoHVuUgtgw5+RpcolpVjeXKLmOQQIECBAIFtAQNuwP6dhrA0z9+zYc6VZ3nxOyPcJECBAgMAxBQS0lfpW4WvpUuWSMixvLlHzHAIECBAgkC8goC3oUYWx4QzZSkuVC8q4sry5RM1zCBAg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AvsQqNBWtzo9cgQEtJxeqIQAAQIECBAgcC8goBkIBAgQIECAAIEwAQEtrCHKIUCAAAECBAgIaMYAAQIECBAgQCBMQEALa4hyCBAgQIAAAQICmjFAgAABAgQIEAgTENDCGqIcAgQIECBAgICAZgwQIECAAAECBMIEBLSwhiiHAAECBAgQICCgGQMECBAgQIAAgTABAS2sIcohQIAAAQIECAhoxgABAgQIECBAIExAQAtriHIIECBAgAABAgKaMUCAAAECBAgQCBMQ0MIaohwCBAgQIECAgIBmDBAgQIAAAQIEwgQEtLCGKIcAAQIECBAgIKAZAwQIECBAgACBMAEBLawhyiFAgAABAgQICGjGAAECBAgQIEAgTEBAC2uIcggQIECAAAECApoxQIAAAQIECBAIExDQwhqiHAIECBAgQICAgGYMECBAgAABAgTCBAS0sIYohwABAgQIECAgoBkDBAgQIECAAIEwAQEtrCHKIUCAAAECBAgIaMYAAQIECBAgQCBMQEALa4hyCBAgQIAAAQICmjFAgAABAgQIEAgTENDCGqIcAgQIECBAgICAZgwQIECAAAECBMIEBLSwhiiHAAECBAgQICCgGQMECBAgQIAAgTABAS2sIcohQIAAAQIECAhoxgABAgQIECBAIExAQAtriHIIECBAgAABAgKaMUCAAAECBAgQCBMQ0MIaohwCBAgQIECAgIBmDBAgQIAAAQIEwgQEtLCGKIcAAQIECBAgIKAZAwQIECBAgACBMAEBLawhyiFAgAABAgQICGjGAAECBAgQIEAgTEBAC2uIcggQIECAAAECApoxQIAAAQIECBAIExDQwhqiHAIECBAgQICAgGYMECBAgAABAgTCBAS0sIYohwABAgQIECAgoBkDBAgQIECAAIEwAQEtrCHKIUCAAAECBAgIaMYAAQIECBAgQCBMQEALa4hyCBAgQIAAAQICmjFAgAABAgQIEAgTENDCGqIcAgQIECBAgICAZgwQIECAAAECBMIEBLSwhiiHAAECBAgQICCgGQMECBAgQIAAgTABAS2sIcohQIAAAQIECAhoxgABAgQIECBAIExAQAtriHIIECBAgAABAgKaMUCAAAECBAgQCBMQ0MIaohwCBAgQIECAgIBmDBAgQIAAAQIEwgQEtLCGKIcAAQIECBAgIKAZAwQIECBAgACBMAEBLawhyiFAgAABAgQICGjGAAECBAgQIEAgTEBAC2uIcggQIECAAAECApoxQIAAAQIECBAIExDQwhqiHAIECBAgQICAgGYMECBAgAABAgTCBAS0sIYohwABAgQIECAgoBkDBAgQIECAAIEwAQEtrCHKIUCAAAECBAgIaMYAAQIECBAgQCBMQEALa4hyCBAgQIAAAQICmjFAgAABAgQIEAgTENDCGqIcAgQIECBAgICAZgwQIECAAAECBMIEBLSwhiiHAAECBAgQICCgGQMECBAgQIAAgTABAS2sIcohQIAAAQIECAhoxgABAgQIECBAIExAQAtriHIIECBAgAABAgKaMUCAAAECBAgQCBMQ0MIaohwCBAgQIECAgIBmDBAgQIAAAQIEwgQEtLCGKIcAAQIECBAgIKAZAwQIECBAgACBMAEBLawhyiFAgAABAgQICGjGAAECBAgQIEAgTEBAC2uIcggQIECAAAECApoxQIAAAQIECBAIExDQwhqiHAIECBAgQICAgGYMECBAgAABAgTCBAS0sIYohwABAgQIECAgoBkDBAgQIECAAIEwAQEtrCHKIUCAAAECBAgIaMYAAQIECBAgQCBMQEALa4hyCBAgQIAAAQICmjFAgAABAgQIEAgTENDCGqIcAgQIECBAgICAZgwQIECAAAECBMIEBLSwhiiHAAECBAgQICCgGQMECBAgQIAAgTCBfwC7ojJDJI6iVgAAAABJRU5ErkJggg==" style="max-width: 100%"></div>
+<div class="image-block"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAhQAAAFuCAYAAADZK4HfAAAMQGlDQ1BJQ0MgUHJvZmlsZQAASImVVwdYU8kWnluSkEBooUsJvQkiUgJICaEFkF4EGyEJEEqIgSBiL4sKrgUVUbChqyKKHRALithZFBv2xYKCsi4W7MqbFNB1X/ne+b6597//nPnPmXPnlgFA7SRHJMpG1QHIEeaLY4L96eOTkumk5wABKNAGBsCWw80TMaOiwgG0ofPf7d1N6A3tmoNU65/9/9U0ePw8LgBIFMSpvDxuDsSHAMCruCJxPgBEKW8+LV8kxbABLTFMEOLFUpwux1VSnCrH+2Q+cTEsiFsBUFLhcMTpAKhegTy9gJsONVT7IXYS8gRCANToEPvk5OTyIE6B2Ab6iCCW6jNSf9BJ/5tm6rAmh5M+jOVzkZlSgCBPlM2Z/n+W439bTrZkKIYVbCoZ4pAY6Zxh3W5l5YZJsQrEfcLUiEiINSH+IODJ/CFGKRmSkHi5P2rIzWPBmgEdiJ14nIAwiA0hDhJmR4Qr+NQ0QRAbYrhC0EJBPjsOYj2IF/PzAmMVPpvFuTGKWGh9mpjFVPDnOWJZXGmsB5KseKZC/3UGn63Qx1SLMuISIaZAbFEgSIiAWBVix7ys2DCFz9iiDFbEkI9YEiPN3wLiGL4w2F+ujxWkiYNiFP4lOXlD88U2ZwjYEQp8ID8jLkReH6yVy5HlD+eCXeELmfFDOvy88eFDc+HxAwLlc8d6+ML4WIXOB1G+f4x8LE4RZUcp/HEzfnawlDeD2CWvIFYxFk/IhwtSro+nifKj4uR54kWZnNAoeT74ChAOWCAA0IEEtlSQCzKBoL2voQ9eyXuCAAeIQTrgAwcFMzQiUdYjhMdYUAT+hIgP8obH+ct6+aAA8l+HWfnRAaTJegtkI7LAU4hzQBjIhtcS2SjhcLQE8AQygn9E58DGhflmwybt//f8EPudYUImXMFIhiLS1YY8iYHEAGIIMYhoixvgPrgXHg6PfrA54wzcY2ge3/0JTwkdhEeEG4Quwu0pgvnin7IcB7qgfpCiFqk/1gK3gpquuD/uDdWhMq6DGwAH3AXGYeK+MLIrZFmKvKVVof+k/bcZ/HA3FH5kJzJK1iX7kW1+Hqlqp+o6rCKt9Y/1keeaOlxv1nDPz/FZP1SfB89hP3tii7GD2DnsFHYBO4Y1ADrWjDVibdhxKR5eXU9kq2soWowsnyyoI/hHvKE7K61knlOtU6/TF3lfPr9Q+o4GrFzRdLEgPSOfzoRfBD6dLeQ6jqQ7Ozm7ASD9vshfX2+iZd8NRKftO7fgDwC8mwcHB49+50KbAdjvDh//I985Gwb8dCgDcP4IVyIukHO49ECAbwk1+KTpA2NgDmzgfJyBG/ACfiAQhIJIEAeSwGSYfQZc52IwDcwE80AxKAUrwBqwHmwCW8FOsAccAA3gGDgFzoJL4Aq4Ae7C1dMNXoB+8A58RhCEhFARGqKPmCCWiD3ijDAQHyQQCUdikCQkBUlHhIgEmYksQEqRMmQ9sgWpQfYjR5BTyAWkA7mNPER6kdfIJxRDVVAt1Ai1QkehDJSJhqFx6CQ0HZ2KFqEL0WVoBVqN7kbr0VPoJfQG2oW+QAcwgCljOpgp5oAxMBYWiSVjaZgYm42VYOVYNVaHNcH7fA3rwvqwjzgRp+F03AGu4BA8HufiU/HZ+FJ8Pb4Tr8db8Wv4Q7wf/0agEgwJ9gRPApswnpBOmEYoJpQTthMOE87AZ6mb8I5IJOoQrYnu8FlMImYSZxCXEjcQ9xJPEjuIj4kDJBJJn2RP8iZFkjikfFIxaR1pN6mZdJXUTfqgpKxkouSsFKSUrCRUmq9UrrRL6YTSVaVnSp/J6mRLsic5kswjTycvJ28jN5Evk7vJnykaFGuKNyWOkkmZR6mg1FHOUO5R3igrK5speyhHKwuU5ypXKO9TPq/8UPmjiqaKnQpLZaKKRGWZyg6Vkyq3Vd5QqVQrqh81mZpPXUatoZ6mPqB+UKWpOqqyVXmqc1QrVetVr6q+VCOrWaox1SarFamVqx1Uu6zWp05Wt1JnqXPUZ6tXqh9R71Qf0KBpjNaI1MjRWKqxS+OCRo8mSdNKM1CTp7lQc6vmac3HNIxmTmPRuLQFtG20M7RuLaKWtRZbK1OrVGuPVrtWv7amtot2gnahdqX2ce0uHUzHSoetk62zXOeAzk2dT7pGukxdvu4S3Trdq7rv9Ubo+enx9Ur09urd0PukT9cP1M/SX6nfoH/fADewM4g2mGaw0eCMQd8IrRFeI7gjSkYcGHHHEDW0M4wxnGG41bDNcMDI2CjYSGS0zui0UZ+xjrGfcabxauMTxr0mNBMfE4HJapNmk+d0bTqTnk2voLfS+00NTUNMJaZbTNtNP5tZm8WbzTfba3bfnGLOME8zX23eYt5vYWIxzmKmRa3FHUuyJcMyw3Kt5TnL91bWVolWi6warHqs9azZ1kXWtdb3bKg2vjZTbaptrtsSbRm2WbYbbK/YoXaudhl2lXaX7VF7N3uB/Qb7jpGEkR4jhSOrR3Y6qDgwHQocah0eOuo4hjvOd2xwfDnKYlTyqJWjzo365uTqlO20zenuaM3RoaPnj24a/drZzpnrXOl8fQx1TNCYOWMax7xysXfhu2x0ueVKcx3nusi1xfWrm7ub2K3Ordfdwj3Fvcq9k6HFiGIsZZz3IHj4e8zxOObx0dPNM9/zgOdfXg5eWV67vHrGWo/lj9029rG3mTfHe4t3lw/dJ8Vns0+Xr6kvx7fa95GfuR/Pb7vfM6YtM5O5m/nS38lf7H/Y/z3LkzWLdTIACwgOKAloD9QMjA9cH/ggyCwoPag2qD/YNXhG8MkQQkhYyMqQTrYRm8uuYfeHuofOCm0NUwmLDVsf9ijcLlwc3jQOHRc6btW4exGWEcKIhkgQyY5cFXk/yjpqatTRaGJ0VHRl9NOY0TEzY87F0mKnxO6KfRfnH7c87m68TbwkviVBLWFiQk3C+8SAxLLErvGjxs8afynJIEmQ1JhMSk5I3p48MCFwwpoJ3RNdJxZPvDnJelLhpAuTDSZnTz4+RW0KZ8rBFEJKYsqulC+cSE41ZyCVnVqV2s9lcddyX/D8eKt5vXxvfhn/WZp3WllaT7p3+qr03gzfjPKMPgFLsF7wKjMkc1Pm+6zIrB1Zg9mJ2XtzlHJSco4INYVZwtZc49zC3A6RvahY1DXVc+qaqf3iMPH2PCRvUl5jvhb8kW+T2Eh+kTws8CmoLPgwLWHawUKNQmFh23S76UumPysKKvptBj6DO6NlpunMeTMfzmLO2jIbmZ06u2WO+ZyFc7rnBs/dOY8yL2ve7/Od5pfNf7sgcUHTQqOFcxc+/iX4l9pi1WJxcecir0WbFuOLBYvbl4xZsm7JtxJeycVSp9Ly0i9LuUsv/jr614pfB5elLWtf7rZ84wriCuGKmyt9V+4s0ygrKnu8atyq+tX01SWr366ZsuZCuUv5prWUtZK1XRXhFY3rLNatWPdlfcb6G5X+lXurDKuWVL3fwNtwdaPfxrpNRptKN33aLNh8a0vwlvpqq+ryrcStBVufbkvYdu43xm812w22l27/ukO4o2tnzM7WGveaml2Gu5bXorWS2t7dE3df2ROwp7HOoW7LXp29pfvAPsm+5/tT9t88EHag5SDjYN0hy0NVh2mHS+qR+un1/Q0ZDV2NSY0dR0KPtDR5NR0+6nh0xzHTY5XHtY8vP0E5sfDEYHNR88BJ0cm+U+mnHrdMabl7evzp663Rre1nws6cPxt09vQ55rnm897nj13wvHDkIuNiwyW3S/Vtrm2Hf3f9/XC7W3v9ZffLjVc8rjR1jO04cdX36qlrAdfOXmdfv3Qj4kbHzfibtzondnbd4t3quZ19+9Wdgjuf7869R7hXcl/9fvkDwwfVf9j+sbfLrev4w4CHbY9iH919zH384kneky/dC59Sn5Y/M3lW0+Pcc6w3qPfK8wnPu1+IXnzuK/5T48+qlzYvD/3l91db//j+7lfiV4Ovl77Rf7PjrcvbloGogQfvct59fl/yQf/Dzo+Mj+c+JX569nnaF9KXiq+2X5u+hX27N5gzOCjiiDmyXwEMNjQtDYDXOwCgJgFAg/szygT5/k9miHzPKkPgP2H5HlFm8M+lDv6/R/fBv5tOAPZtg9svqK82EYAoKgBxHgAdM2a4De3VZPtKqRHhPmBzxNfUnFTwb0y+5/wh75/PQKrqAn4+/wtLs3xp+VKiewAAAIplWElmTU0AKgAAAAgABAEaAAUAAAABAAAAPgEbAAUAAAABAAAARgEoAAMAAAABAAIAAIdpAAQAAAABAAAATgAAAAAAAACQAAAAAQAAAJAAAAABAAOShgAHAAAAEgAAAHigAgAEAAAAAQAAAhSgAwAEAAAAAQAAAW4AAAAAQVNDSUkAAABTY3JlZW5zaG90gOch4wAAAAlwSFlzAAAWJQAAFiUBSVIk8AAAAdZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IlhNUCBDb3JlIDYuMC4wIj4KICAgPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4KICAgICAgPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIKICAgICAgICAgICAgeG1sbnM6ZXhpZj0iaHR0cDovL25zLmFkb2JlLmNvbS9leGlmLzEuMC8iPgogICAgICAgICA8ZXhpZjpQaXhlbFlEaW1lbnNpb24+MzY2PC9leGlmOlBpeGVsWURpbWVuc2lvbj4KICAgICAgICAgPGV4aWY6UGl4ZWxYRGltZW5zaW9uPjUzMjwvZXhpZjpQaXhlbFhEaW1lbnNpb24+CiAgICAgICAgIDxleGlmOlVzZXJDb21tZW50PlNjcmVlbnNob3Q8L2V4aWY6VXNlckNvbW1lbnQ+CiAgICAgIDwvcmRmOkRlc2NyaXB0aW9uPgogICA8L3JkZjpSREY+CjwveDp4bXBtZXRhPgp5yO/zAAAAHGlET1QAAAACAAAAAAAAALcAAAAoAAAAtwAAALcAAA9k20Rr7wAADzBJREFUeAHs3T2OJEkZBuBZd+21cUGCs+AgwQW4Au4auHsFLgASDmcBCdy1114XJns6RkVXVXdEfBGZ8fO0NKruqszIiOeLzH4rM2v6m/9+/vrkiwABAgQIECAQEPhGoAjoWZUAAQIECBB4ERAoTAQCBAgQIEAgLCBQhAk1QIAAAQIECAgU5gABAgQIECAQFhAowoQaIECAAAECBAQKc4AAAQIECBAICwgUYUINECBAgAABAgKFOUCAAAECBAiEBQSKMKEGCBAgQIAAAYHCHCBAgAABAgTCAgJFmFADBAgQIECAgEBhDhAgQIAAAQJhAYEiTKgBAgQIECBAQKAwBwgQIECAAIGwgEARJtQAAQIECBAgIFCYAwQIECBAgEBYQKAIE2qAAAECBAgQECjMAQIECBAgQCAsIFCECTVAgAABAgQICBTmAAECBAgQIBAWECjChBogQIAAAQIEBApzgAABAgQIEAgLCBRhQg0QIECAAAECAoU5QIAAAQIECIQFBIowoQYIECBAgAABgcIcIECAAAECBMICAkWYUAMECBAgQICAQGEOECBAgAABAmEBgSJMqAECBAgQIEBAoDAHCBAgQIAAgbCAQBEm1AABAgQIECAgUJgDBAgQIECAQFhAoAgTaoAAAQIECBAQKMwBAgQIECBAICwgUIQJNUCAAAECBAgIFOYAAQIECBAgEBYQKMKEGiBAgAABAgQECnOAAAECBAgQCAsIFGFCDRAgQIAAAQIChTlAgAABAgQIhAUEijChBggQIECAAAGBwhwgQIAAAQIEwgICRZhQAwQIECBAgIBAYQ4QIECAAAECYQGBIkyoAQIECBAgQECgMAcIECBAgACBsIBAESbUAAECBAgQICBQmAMECBAgQIBAWECgCBNqgAABAgQIEBAozAECBAgQIEAgLCBQhAk1QIAAAQIECAgU5gABAgQIECAQFhAowoQaIECAAAECBAQKc4AAAQIECBAICwgUYUINECBAgAABAgKFOUCAAAECBAiEBQSKMKEGCBAgQIAAAYHCHCBAgAABAgTCAgJFmFADBAgQIECAgEBhDhAgQIAAAQJhAYEiTKgBAgQIECBAQKAwBwgQIECAAIGwgEARJtQAAQIECBAgIFCYAwQIECBAgEBYQKAIE2qAAAECBAgQECjMAQIECBAgQCAsIFCECTVAgAABAgQICBTmAAECBAgQIBAWECjChBogQIAAAQIEBApzgAABAgQIEAgLCBRhQg0QIECAAAECAoU5QIAAAQIECIQFBIowoQYIECBAgAABgcIcIECAAAECBMICAkWYUAMECBAgQICAQGEOECBAgAABAmEBgSJMqAECBAgQIEBAoDAHCBAgQIAAgbCAQBEm1AABAgQIECAgUJgDBAgQIECAQFhAoAgTaoAAAQIECBAQKMwBAgQIECBAICwgUIQJNUCAAAECBAgIFOYAAQIECBAgEBYQKMKEGiBAgAABAgQECnOAAAECBAgQCAsIFGFCDRAgQIAAAQIChTlAgAABAgQIhAUEijChBggQIECAAAGBwhwgQIAAAQIEwgICRZhQAwQIECBAgIBAYQ4QIECAAAECYQGBIkyoAQIECBAgQECgMAcILCTw87/+czeah8/98365uxVfn/j2N7989tKnb3/9/6+9/fnpil4gQGA5AYFiuZIa0MoCKRwcjz/fhIL0/ChjT8HiNowcz6XnR+mnfhAg0E5AoGhnqSUCYYEUDEYPDNGBpmAhcEQlrU9gHAGBYpxa6MlmAm/DQ/p5M4a74b6cyXi9zPLd739797onCBAYU0CgGLMuerWgwMtZh9dLFcJDWYFTyHh5fHPfRllLliZAoJeAQNFLVrtbC6TA8NNf//HikH7eGqXx4L/7w5ezF0JGY1jNEagUECgq4axG4FYgBYYjQKTvb1/3fX+BFDBcJulvbQsEHgkIFI9UPEcgQ+AIDs5AZEBdsIhLJBeg2+T2AgLF9lMAQIlAChEjn4U4fpk++rr9REV6/dmyx+vvjfH2I6uprfeWT8tc9ejsxVXytruTgECxU7WNtVgg/ZIc6VJGCgEpIHz9+UmQKB50cIVk9vXx9f/LSD8Hmw+vLlyECTVA4KGAQPGQxZM7Cxy/+K68lPE1ILx+dPLrz4MEhujcSMHi6+PnwJG+j7Zduv5hewQz912UylmewL2AQHFv4plNBVKQOPuXW/ql9vK4SGionUI//e31UzEXhAxnLmqrZj0CXwQECjNha4GzQ0Q625B+eaWfty7CB4O/ImQc9XHW4oPCeJnAGwGB4g2IH/cQOCNIpLAgPLSdU0ft0lmk4+bQ9H3brXxpLdVOuOihq83VBASK1SpqPE8FzgoR6ZdQChRPO+SFZgLpLEa696VZwzcNHXU9aqquNyi+JXAjIFDcYPh2TYHeQeL4BZN+2awpONeoeoeLl1DhRs65JoXeniIgUJzCbCNnC/QMEekdqhBxdlXLt3fMg5d/nS6NHHPA5ZDyulhjTQGBYs26bjuqXkEinYU4YFOg2BZ54oH3OnshWEw8KXS9mYBA0YxSQ1cK9AgSKUQIEFdWtt+2j3DR+qZOwaJfvbQ8voBAMX6N9PAdAUHiHRwvZQsc4aLlDZ2CRTa9BRcSECgWKuZOQ2kdJJyN2Gn2PB9r60sigsVza6+sJyBQrFfTpUckSCxd3qEG1/KshWAxVGl1ppOAQNEJVrNtBVoGCWcj2tZm9dZanrUQLFafLXuPT6DYu/7Dj75VkDhCxPFHoF4eN/97GcMXfeAOtjprIVgMXGRdqxYQKKrprNhboMXB29mI3lXas/0Wc/OQEyz2nD+rjlqgWLWyE4+rxVkJQWLiCTBR1wWLiYqlq90FBIruxDaQKyBI5EpZbjSBFsHiOFvhktxoldWfEgGBokTLst0Efvz+h9BfjXRGoltpNFwg0CpY+O+8C9AtOoyAQDFMKfbsyHFW4ggTtV+CRK2c9XoKCBY9dbU9qoBAMWplFu9X9PKGILH4BFlkeNFg4abNRSbCJsMQKDYp9EjDjBxkBYmRKqkvuQKROX9sQ7DIlbbclQICxZX6m207elbCQXWzCbPgcCPBQphecEIsNiSBYrGCjjocB9JRK6NfVwhE9gfB+oqK2WaOgECRo2SZkEDtJzi8IwuxW3lwAaFi8ALpXrGAQFFMZoVcgcgnOLwLy1W23OwCgsXsFdT/JCBQJAmPTQVqD5LHWYlf/PlPTfuiMQIzCNTuM8L3DNXdo48CxR51Pm2UkRsvjyBxBApfBHYVqA0VgviuM2ascQsUY9Vj6t7UXuLwDmvqsut8B4HaYGFf6lAMTWYLCBTZVBZ8T6DmAOimy/dEvba7QM0+dZgJFbvPnOvGL1BcZ7/ElmsvcTjoLVF+gzhBoCZYCOsnFMYm7gQEijsST+QK1BzojraFiVxhyxH4ImBfMxNmEBAoZqjSgH2sOcB51zRgIXVpKoGa/9NFgJ+qxFN3VqCYunzXdN5B7Rp3WyVwCNSGeR/HNn96CwgUvYUXar/2fgkfB11oEhjKEAI1oeLouH1xiPIt2wmBYtnSth1YzUdCXeJoWwOtEXgrUHO2UKh4q+jnVgICRSvJhdupeTfkuu3CE8LQhhKwfw5Vjq07I1BsXf6PB19zsPIO6GNXSxBoKVCznwr9LSugrUNAoDAPngqUHqSOSxxHmPBFgMA1AqX7rFBxTZ1W3apAsWplg+NyYAoCWp3ARQL23YvgbdYZCnPgXqD0Ri/vcu4NPUPgSoHSUOHs4pXVWmfbzlCsU8vwSGo+Fup+iTC7Bgh0ERAqurBq9B0BgeIdnJ1eqvlYqDCx0wwx1hkF7NczVm3ePgsU89auWc9LDzr+f4lm9Boi0F2g5syjy5jdy7LkBgSKJcuaP6iaMOGTHPm+liQwikDpvVHOQI5SuXn6IVDMU6vmPS0NE961NC+BBgmcKlB6X4VQcWp5pt+YQDF9CesGIEzUuVmLwOwCQsXsFRy3/wLFuLXp1jNhohuthglMISBUTFGm6TopUExXsliHhYmYn7UJrCIgVKxSyXHGIVCMU4tTevLv3/0xezuun2ZTWZDAlAKlbzB+9fe/TDlOnT5HQKA4x3mIrZTc5S1MDFEynSDQXaAkVPgfNbuXY+oNCBRTly+/8yVhwqc58l0tSWAFgZLLH0LFChXvMwaBoo/rUK0KE0OVQ2cIDCkgVAxZlqk6JVBMVa7yzgoT5WbWILCrgFCxa+XbjFugaOM4ZCvCxJBl0SkCQwsIFUOXZ+jOCRRDl6e+cyUHBfdM1Dtbk8CKAiXHD/dUrDgD6sYkUNS5Db1WycFAmBi6lDpH4DIBx5HL6KfdsEAxbeked9xB4LGLZwkQKBcoOZ74qHm572prCBQLVbTk8+TOTCxUeEMh0FFAqOiIu1jTAsVCBc29CVOYWKjohkLgBIHcUOF+ihOKMfAmBIqBi1PStdwdXpgoUbUsAQJJIPcYI1Qksf0eBYoFam5HX6CIhkBgAgFnQSco0oVdFCguxG+x6dwwcWzLH/ZpIa4NAvsKuE9r39rnjFygyFEadBk796CF0S0CCwuUHHd88mPhifBgaALFA5RZnsr9U+Tum5ilovpJYA6B3DOj7qeYo56teilQtJI8uZ3cHVqYOLkwNkdgE4HcY5BQscmE+DxMgWLCWtuRJyyaLhNYTCD3OHQM2xubxYr/ZDgCxROYUZ8u2YndhDlqFfWLwPwCuZdc00iFiiSx7qNAMVltc3diN0NNVljdJTCRQMkbm9thOS7daqz3vUAxUU1zd2LvBCYqqq4SmFAg943N26G5n+KtyFo/CxST1FOYmKRQuklgcYHcY9EzBm94nsnM/7xAMUkNc94RSP+TFFM3CUwskHMs+mh4Ln18JDTn6wLFBHXLfUfgJswJiqmLBCYWyD0WfTREb34+EprzdYFi8Lrl7sBOIw5eSN0jsIBAi7MTicExK0ms8yhQDF7LnB3Yjjl4EXWPwAICuW9uSobq0keJ1vjLChQD1yh3B3apY+Ai6hqBRQRy3tyUDtWlj1KxsZcXKAatT26YcHZi0ALqFoGFBHKPRzVDdgyrURtzHYFiwLrk/jU/O+KAxdMlAgsK9Dg7ccvk0setxrzfCxQD1u7H73/4dISKj75c6vhIyOsECEQFep6dSH1z6SNJzP0oUAxWv9yd19mJwQqnOwQWFeh9diKxOaYliXkf/wcAAP//IEOhhgAADDFJREFU7d09jttWFAVguXXt2q0D2GtxE8DZQLbgNoXbbCEbSIA0XksCxG1q124TE/DYA1kjPUpHIjnnUzN/1CXvd0Xi8GnsefLf58fOYxUCn/7+sPv3l19PHsuzn17vnr15fXI7GxAgQOASgY9/vN99/P39JSVmPff5u7e7py9fzHqOjdcj8ESgWM8wRk/eH/78bT0H7UgIEHi0Av/8+PNNe5vCxBQqPLYpIFCsZG6jYcLqxEoG5jAIPHKB0WtSmsEqRVr0dvUEittZH93TyJ2AMHGU0A8JEAgKjFyTgrv7WsoqxVeKzX0iUKxgZKN3At7qWMGwHAKBAoHRa9K1KKxSXEv2unUFiuv6DlUfuROwOjFEaSMCBAICI9ekwG6OlnADdZRnlT8UKBYey8idgDCx8JDsnkCRwMg16RYcrnu3UM7uQ6DIes6uNnInYPlvNqsnECBwpsDINenM0rOf5to3m2zRJwgUC/KP3AlI6QsOyK4JlAmMXJNuSeIXNG+pffm+BIrLDc+qMHrieh/xLF5PIkDgDIE1rU7cHb5VijuJ9X8UKBaa0UigsDqx0HDslkChwMg1aQkWqxRLqJ+3T4HiPLeLnjV64lqduIjZkwkQmCGwxtWJu8O3SnEnse6PAsUC8xk5ca1OLDAYuyRQKjB6k7MUj1WKpeTn7fdRB4rpj23tP6YX5pKPkRPXybPkhOybQJ/AyE3O0ipuspaewOn9P/pAMfLXO/dDxtNXh0PHd9udEU5GTlwnzukXri0IEMgIjNzkZPZ0WRU3Wpf53eLZjzpQTIBToDi0UnEt3O9Cx144OfWngIWJa01GXQIEDgmM3OQcet4S3/N7ZUuoj+/z0QeKKUyMrFKMk113SyfMdX1VJ0Dgm0BydWL/Zmray/5q78Ftvqz0jlyrXR+/zW6Nnz36QDGhJ0+aaw7R6sQ1ddUmQGBf4NDN1pwQsF/v0q+PXatdHy/Vvf7zKwLFxLj2ZT0ny/Vf7PZAgMD6BQ69Te33J9Y/t+kIawLFseR761FN4eHu8emvD7vp60NLgXfb+EiAAIEmgel6PT1cH7c19ZpAMY1lDasUkva2ThBHS4AAAQJjAlWBYg2rFP7Ht7EXpq0IECBAYFsCVYFiGs2SqxR+T2JbJ4ejJUCAAIFxgbpAseQqhX/yNP7CtCUBAgQIbEugLlBM41lilcLqxLZODEdLgAABAvMEKgPFrVcphIl5L0pbEyBAgMD2BCoDxTSmW65SeKtjeyeGIyZAgACBeQK1geJWqxRWJ+a9IG1NgAABAtsUqA0U07iuvUohTGzzpHDUBAgQIDBfoDpQXHuVwlsd81+QnkGAAAEC2xSoDhTTyK61SmF1YpsnhKMmQIAAgfME6gPFyJ/MnUsrTMwVsz0BAgQIbF2gPlBMAzz01+0uGay3Oi7R81wCBAgQ2KKAQPF5aslVCqsTWzwNHDMBAgQIXCogUHwRTKxSCBOXvhw9nwABAgS2KiBQfJlcYpXCWx1bPQ0cNwECBAhcKiBQ3BO8ZJXC6sQ9SJ8SIECAQJ2AQHFv5OeuUggT9xB9SoAAAQKVAgLF3tjPWaV4/u7t7unLF3uVfEmAAAECBHoEBIq9Wc9dpbA6sQfoSwIECBCoFBAoDox9dJViWpWYVic8CBAgQIBAu4BAceAVMLpK4a2OA3i+RYAAAQKVAgLFA2M/tUrhrY4H4HybAAECBCoFBIoHxn5qlcL/OfEAnG8TIECAQKWAQHFk7A+tUlidOILmRwQIECBQKSBQHBn7oVUKYeIImB8RIECAQK2AQHFi9PurFN7qOAHmxwQIECBQKSBQnBj7/VUKqxMnsPyYAAECBGoFBIqB0U+rFE9fvdg9e/N6YGubECBAgACBPgGBYmDm0yqF/1p7AMomBAgQIFArIFDUjl7jBAgQIEAgJyBQ5CxVIkCAAAECtQICRe3oNU6AAAECBHICAkXOUiUCBAgQIFArIFDUjl7jBAgQIEAgJyBQ5CxVIkCAAAECtQICRe3oNU6AAAECBHICAkXOUiUCBAgQIFArIFDUjl7jBAgQIEAgJyBQ5CxVIkCAAAECtQICRe3oNU6AAAECBHICAkXOUiUCBAgQIFArIFDUjl7jBAgQIEAgJyBQ5CxVIkCAAAECtQICRe3oNU6AAAECBHICAkXOUiUCBAgQIFArIFDUjl7jBAgQIEAgJyBQ5CxVIkCAAAECtQICRe3oNU6AAAECBHICAkXOUiUCBAgQIFArIFDUjl7jBAgQIEAgJyBQ5CxVIkCAAAECtQICRe3oNU6AAAECBHICAkXOUiUCBAgQIFArIFDUjl7jBAgQIEAgJyBQ5CxVIkCAAAECtQICRe3oNU6AAAECBHICAkXOUiUCBAgQIFArIFDUjl7jBAgQIEAgJyBQ5CxVIkCAAAECtQICRe3oNU6AAAECBHICAkXOUiUCBAgQIFArIFDUjl7jBAgQIEAgJyBQ5CxVIkCAAAECtQICRe3oNU6AAAECBHICAkXOUiUCBAgQIFArIFDUjl7jBAgQIEAgJyBQ5CxVIkCAAAECtQICRe3oNU6AAAECBHICAkXOUiUCBAgQIFArIFDUjl7jBAgQIEAgJyBQ5CxVIkCAAAECtQICRe3oNU6AAAECBHICAkXOUiUCBAgQIFArIFDUjl7jBAgQIEAgJyBQ5CxVIkCAAAECtQICRe3oNU6AAAECBHICAkXOUiUCBAgQIFArIFDUjl7jBAgQIEAgJyBQ5CxVIkCAAAECtQICRe3oNU6AAAECBHICAkXOUiUCBAgQIFArIFDUjl7jBAgQIEAgJyBQ5CxVIkCAAAECtQICRe3oNU6AAAECBHICAkXOUiUCBAgQIFArIFDUjl7jBAgQIEAgJyBQ5CxVIkCAAAECtQICRe3oNU6AAAECBHICAkXOUiUCBAgQIFArIFDUjl7jBAgQIEAgJyBQ5CxVIkCAAAECtQICRe3oNU6AAAECBHICAkXOUiUCBAgQIFArIFDUjl7jBAgQIEAgJyBQ5CxVIkCAAAECtQICRe3oNU6AAAECBHICAkXOUiUCBAgQIFArIFDUjl7jBAgQIEAgJyBQ5CxVIkCAAAECtQICRe3oNU6AAAECBHICAkXOUiUCBAgQIFArIFDUjl7jBAgQIEAgJyBQ5CxVIkCAAAECtQICRe3oNU6AAAECBHICAkXOUiUCBAgQIFArIFDUjl7jBAgQIEAgJyBQ5CxVIkCAAAECtQICRe3oNU6AAAECBHICAkXOUiUCBAgQIFArIFDUjl7jBAgQIEAgJyBQ5CxVIkCAAAECtQICRe3oNU6AAAECBHICAkXOUiUCBAgQIFArIFDUjl7jBAgQIEAgJyBQ5CxVIkCAAAECtQICRe3oNU6AAAECBHICAkXOUiUCBAgQIFArIFDUjl7jBAgQIEAgJyBQ5CxVIkCAAAECtQICRe3oNU6AAAECBHICAkXOUiUCBAgQIFArIFDUjl7jBAgQIEAgJyBQ5CxVIkCAAAECtQICRe3oNU6AAAECBHICAkXOUiUCBAgQIFArIFDUjl7jBAgQIEAgJyBQ5CxVIkCAAAECtQICRe3oNU6AAAECBHICAkXOUiUCBAgQIFArIFDUjl7jBAgQIEAgJyBQ5CxVIkCAAAECtQICRe3oNU6AAAECBHICAkXOUiUCBAgQIFArIFDUjl7jBAgQIEAgJyBQ5CxVIkCAAAECtQICRe3oNU6AAAECBHICAkXOUiUCBAgQIFArIFDUjl7jBAgQIEAgJyBQ5CxVIkCAAAECtQICRe3oNU6AAAECBHICAkXOUiUCBAgQIFArIFDUjl7jBAgQIEAgJyBQ5CxVIkCAAAECtQICRe3oNU6AAAECBHICAkXOUiUCBAgQIFArIFDUjl7jBAgQIEAgJyBQ5CxVIkCAAAECtQICRe3oNU6AAAECBHICAkXOUiUCBAgQIFArIFDUjl7jBAgQIEAgJyBQ5CxVIkCAAAECtQICRe3oNU6AAAECBHICAkXOUiUCBAgQIFArIFDUjl7jBAgQIEAgJyBQ5CxVIkCAAAECtQICRe3oNU6AAAECBHICAkXOUiUCBAgQIFArIFDUjl7jBAgQIEAgJyBQ5CxVIkCAAAECtQICRe3oNU6AAAECBHICAkXOUiUCBAgQIFArIFDUjl7jBAgQIEAgJ/A/YZKZXNWJcVwAAAAASUVORK5CYII=" style="max-width: 100%"></div></div></div>
+<div class="message assistant" id="msg-2026-02-05T08-05-43-291Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-02-05T08-05-43-291Z" class="timestamp-link"><time datetime="2026-02-05T08:05:43.291Z" data-timestamp="2026-02-05T08:05:43.291Z">2026-02-05T08:05:43.291Z</time></a></div><div class="message-content">
+<div class="thinking"><div class="thinking-label">Thinking</div><p>Looking at the images, I can see the problem clearly now. The arrowheads are positioned at the correct endpoints of the arc, BUT they're pointing in the wrong direction - they're not aligned with the tangent of the arc at those points.</p>
+<p>The issue is with the tangent angle calculations. Let me think about this:</p>
+<p>For an arc that curves upward (center below the arc):
+- At the left endpoint (start), the tangent should point upward and to the right
+- At the right endpoint (end), the tangent should point upward and to the right (continuing the arc direction)</p>
+<p>For an arc that curves downward (center above the arc):
+- At the left endpoint (start), the tangent should point downward and to the right
+- At the right endpoint (end), the tangent should point downward and to the right</p>
+<p>Looking at the screenshots:
+1. First image (smile shape, curving down): The arrowheads are pointing outward/upward instead of along the tangent direction
+2. Second image (slight curve down): Same issue - arrowheads not aligned with curve
+3. Third image (curve up): Arrowheads pointing down instead of along the tangent</p>
+<p>The tangent angle calculation is wrong. Let me reconsider.</p>
+<p>For a circle with center at (arcCenterX, arcCenterY):
+- A point on the circle at angle θ (measured from the positive x-axis) is at (centerX + r<em>cos(θ), centerY + r</em>sin(θ))
+- The tangent at that point is perpendicular to the radius, so tangent angle = θ + π/2 or θ - π/2</p>
+<p>Let me reconsider the geometry:</p>
+<p>For curveUp = true (arc curves upward, center is below):
+- The arc center is at (centerX, centerY + radius * cos(halfArcAngle))
+- Wait, that doesn't look right. Let me think again.</p>
+<p>Actually, let me reconsider the whole arc geometry. </p>
+<p>I need to think about the arc differently - it should start on the left, end on the right, span a specific arc angle, and have a chord length matching the desired length. For a circular arc with angle θ, the tangent at any point is perpendicular to the radius at that point, so if the radius points at angle α, the tangent points at angle α + π/2.</p>
+<p>For an upward-curving arc, the center lies below the chord, with the arc sweeping from upper-left to upper-right. The key insight is that the tangent directions at the endpoints should be consistent with the curve direction - at the start point on the left, the tangent should angle upward and rightward, while at the end point on the right, it should angle downward and rightward, creating that smooth hill-like shape. think about the parametric position and direction of travel along the circle. For an arc that curves upward with the center below, the tangent at the start point is perpendicular to the radius there, and similarly at the end point. The radius at the start points toward the upper-left of the center, so the tangent—and thus the direction of travel—is perpendicular to that, which means the arrowhead should point in the direction the curve is actually moving at that endpoint. For the arc setup, I need to account for SVG's coordinate system where Y increases downward. When the center is below the arc visually, traveling left to right along the top traces a clockwise path in standard math coordinates. For clockwise motion, the tangent at angle θ points in direction θ - π/2. So for curveUp, the start position is at angle 3π/2.</p>
+<p>Now I'm working through the exact angle calculations. The start and end points sit symmetrically above the center—start at upper-left, end at upper-right. If the center is at (cx, cy), I need to determine the precise angles based on the arc's geometry and ensure the tangent directions align correctly with the curve's direction of travel. gle) - this vector points up and to the left.</p>
+<p>The radius angle is atan2(-cos(h), -sin(h)), which for small h approximates to -π/2 (straight up). For clockwise motion along the arc, the tangent at the start should point right and slightly upward, while at the end it points right and downward. I can derive the tangent direction from the geometry: at the start point on the upper-left, moving clockwise means the tangent vector should be perpendicular to the radius, rotated 90° in the direction of motion. = -3π/4 or 5π/4 (pointing to upper-left). For clockwise motion, the tangent should be perpendicular to the radius. Given a radius vector (x-cx, y-cy), the perpendicular directions are (-(y-cy), x-cx) and (y-cy, -(x-cx)). I need to determine which one corresponds to clockwise motion in SVG coordinates where Y increases downward. At the start point in the upper-left region of the center, the correct perpendicular direction should align with the expected clockwise tangent direction.</p>
+<p>Computing the perpendiculars: the radius vector from center to start is (-r<em>sin(h), -r</em>cos(h)), giving perpendiculars of (r<em>cos(h), -r</em>sin(h)) pointing right and upward, and (-r<em>cos(h), r</em>sin(h)) pointing left and downward. For clockwise motion starting from the upper-left and moving rightward along the top, I need (r<em>cos(h), -r</em>sin(h)). The tangent angle becomes atan2(-sin(h), cos(h))</p>
+<p>= -h. Since the START arrowhead points backward against the direction of travel, its angle should be -h + π, or equivalently π - h.</p>
+<p>At the end point, the radius vector (r<em>sin(h), r</em>cos(h)) and its perpendiculars show the direction of travel there, with the END arrowhead pointing forward in the direction of motion.</p>
+<p>The tangent angle at the end works out to h, so the end arrowhead angle is h. For the start arrowhead pointing backward, the angle is π - h. Now I need to check what the current implementation has.</p>
+<p>Looking at the code, when curveUp is true, it sets startAngle to 3π/2 + h and endAngle to π/2 - h. These don't match what they should be. The end arrowhead should point in the direction of travel (h), and the start arrowhead should point opposite to the initial travel direction. I need to reconsider the geometry here—the start arrowhead represents backward motion, so if travel begins at angle -h, the opposite direction would be π - h.</p>
+<p>For curveDown, the arc curves downward with the center positioned above. The start point sits at the lower-left of the circle and the end point at the lower-right. As motion travels counterclockwise from left to right along the bottom of the arc, the tangent vector at the start position points in the direction of travel, which I can derive from the perpendicular to the radius vector. another approach. For a circle parameterized by angle θ from the positive x-axis (counterclockwise), the position is (r<em>cos(θ), r</em>sin(θ)) and the tangent direction for counterclockwise motion is (-r<em>sin(θ), r</em>cos(θ)). In SVG's y-down coordinate system, counterclockwise motion appears visually clockwise.</p>
+<p>For curveUp, the center sits below the arc at some point (0, d) where d &gt; 0. The arc spans the top portion of the circle, with endpoints at y = 0.</p>
+<p>Given a circle with radius r and center at (0, d), points satisfy x² + (y-d)² = r². At y = 0, this gives x = ±√(r² - d²), so the start point is at (-√(r² - d²), 0) and end point at (+√(r² - d²), 0). The angle for the start position is atan2(-d, -√(r² - d²)), which places it in the third quadrant relative to the center. Rather than continuing with angle calculations, I should think about this more directly from the geometry of how the arc curves.</p>
+<p>For an upward-curving arc (∩ shape), the tangent at the left endpoint points up and to the right, while at the right endpoint it points down and to the right. For a downward-curving arc (∪ shape), these directions reverse—left endpoint tangent goes down-right, right endpoint goes up-right. As the arc becomes more pronounced (larger halfArcAngle), the tangent at the start tilts more upward for curveUp, and the tangent at the end tilts more downward. This means the start angle for a curveUp arc should increase as curvature increases.</p>
+<p>The arrowhead angles follow from the tangent directions: for curveUp, the start arrowhead (pointing backward along the curve) uses π - halfArcAngle, while the end arrowhead uses +halfArcAngle. For curveDown, these flip—the start arrowhead becomes π + halfArcAngle and the end arrowhead becomes -halfArcAngle. The code needs updating to apply these corrected angle calculations.</p>
+<p>Looking at the first image with the downward curve, I notice the arrowheads appear to point outward perpendicular to the tangent rather than along it—the right one points horizontally right instead of up-right, and the left points horizontally left instead of up-left.</p></div></div></div>
+<div class="message assistant" id="msg-2026-02-05T08-05-43-627Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-02-05T08-05-43-627Z" class="timestamp-link"><time datetime="2026-02-05T08:05:43.627Z" data-timestamp="2026-02-05T08:05:43.627Z">2026-02-05T08:05:43.627Z</time></a></div><div class="message-content">
+<div class="assistant-text"><p>I can see the issue now from the screenshots. The arrowheads are pointing in completely wrong directions - they're not aligned with the tangent of the arc. The tangent angle calculations are incorrect. Let me fix them:</p></div></div></div>
+<div class="message assistant" id="msg-2026-02-05T08-05-51-262Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-02-05T08-05-51-262Z" class="timestamp-link"><time datetime="2026-02-05T08:05:51.262Z" data-timestamp="2026-02-05T08:05:51.262Z">2026-02-05T08:05:51.262Z</time></a></div><div class="message-content"><div class="file-tool edit-tool" data-tool-id="toolu_011reap1fkDaoD9ECGBK4kGp">
+<div class="file-tool-header edit-header"><span class="file-tool-icon">✏️</span> Edit <span class="file-tool-path">index.html</span></div>
+<div class="file-tool-fullpath">/Users/lichard/Projects/vibes/arrow-generator/index.html</div>
+<div class="truncatable"><div class="truncatable-content">
+<div class="edit-section edit-old"><div class="edit-label">−</div><pre class="edit-content">        // Start and end points on the arc
+        if (curveUp) {
+          // Arc curves upward (center is below)
+          startX = arcCenterX - radius * Math.sin(halfArcAngle);
+          startY = arcCenterY - radius * Math.cos(halfArcAngle);
+          endX = arcCenterX + radius * Math.sin(halfArcAngle);
+          endY = arcCenterY - radius * Math.cos(halfArcAngle);
+
+          // Tangent angles (perpendicular to radius)
+          startAngle = Math.PI / 2 + halfArcAngle + Math.PI;
+          endAngle = Math.PI / 2 - halfArcAngle;
+        } else {
+          // Arc curves downward (center is above)
+          startX = arcCenterX - radius * Math.sin(halfArcAngle);
+          startY = arcCenterY + radius * Math.cos(halfArcAngle);
+          endX = arcCenterX + radius * Math.sin(halfArcAngle);
+          endY = arcCenterY + radius * Math.cos(halfArcAngle);
+
+          // Tangent angles
+          startAngle = -Math.PI / 2 - halfArcAngle + Math.PI;
+          endAngle = -Math.PI / 2 + halfArcAngle;
+        }</pre></div>
+<div class="edit-section edit-new"><div class="edit-label">+</div><pre class="edit-content">        // Start and end points on the arc
+        if (curveUp) {
+          // Arc curves upward (center is below)
+          startX = arcCenterX - radius * Math.sin(halfArcAngle);
+          startY = arcCenterY - radius * Math.cos(halfArcAngle);
+          endX = arcCenterX + radius * Math.sin(halfArcAngle);
+          endY = arcCenterY - radius * Math.cos(halfArcAngle);
+
+          // Tangent angles: at start going up-right, at end going down-right
+          // End arrow points forward (in direction of travel): +halfArcAngle
+          // Start arrow points backward: π - halfArcAngle
+          endAngle = halfArcAngle;
+          startAngle = Math.PI - halfArcAngle;
+        } else {
+          // Arc curves downward (center is above)
+          startX = arcCenterX - radius * Math.sin(halfArcAngle);
+          startY = arcCenterY + radius * Math.cos(halfArcAngle);
+          endX = arcCenterX + radius * Math.sin(halfArcAngle);
+          endY = arcCenterY + radius * Math.cos(halfArcAngle);
+
+          // Tangent angles: at start going down-right, at end going up-right
+          // End arrow points forward: -halfArcAngle
+          // Start arrow points backward: π + halfArcAngle
+          endAngle = -halfArcAngle;
+          startAngle = Math.PI + halfArcAngle;
+        }</pre></div>
+</div><button class="expand-btn">Show more</button></div>
+</div></div></div>
+<div class="message tool-reply" id="msg-2026-02-05T08-05-51-313Z"><div class="message-header"><span class="role-label">Tool reply</span><a href="#msg-2026-02-05T08-05-51-313Z" class="timestamp-link"><time datetime="2026-02-05T08:05:51.313Z" data-timestamp="2026-02-05T08:05:51.313Z">2026-02-05T08:05:51.313Z</time></a></div><div class="message-content"><div class="tool-result"><div class="truncatable"><div class="truncatable-content"><pre>The file /Users/lichard/Projects/vibes/arrow-generator/index.html has been updated successfully.</pre></div><button class="expand-btn">Show more</button></div></div></div></div>
+<div class="message assistant" id="msg-2026-02-05T08-05-58-699Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-02-05T08-05-58-699Z" class="timestamp-link"><time datetime="2026-02-05T08:05:58.699Z" data-timestamp="2026-02-05T08:05:58.699Z">2026-02-05T08:05:58.699Z</time></a></div><div class="message-content">
+<div class="thinking"><div class="thinking-label">Thinking</div><p>I've fixed the tangent angle calculations. Now:</p>
+<p>For curveUp (arc curves upward like a hill ∩):
+- At the left end, tangent points up-right: angle = -halfArcAngle (negative because up is negative Y in SVG)
+- At the right end, tangent points down-right: angle = +halfArcAngle
+- The end arrowhead points in the direction of travel: endAngle = halfArcAngle
+- The start arrowhead points backward: startAngle = π - halfArcAngle</p>
+<p>For curveDown (arc curves downward like a smile ∪):
+- At the left end, tangent points down-right: angle = +halfArcAngle<br />
+- At the right end, tangent points up-right: angle = -halfArcAngle
+- The end arrowhead points in the direction of travel: endAngle = -halfArcAngle
+- The start arrowhead points backward: startAngle = π + halfArcAngle</p>
+<p>This should now correctly align the arrowheads with the tangent of the arc at each endpoint.</p></div></div></div>
+<div class="message assistant" id="msg-2026-02-05T08-06-00-743Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-02-05T08-06-00-743Z" class="timestamp-link"><time datetime="2026-02-05T08:06:00.743Z" data-timestamp="2026-02-05T08:06:00.743Z">2026-02-05T08:06:00.743Z</time></a></div><div class="message-content">
+<div class="assistant-text"><p>Done! The issue was that the tangent angle calculations were completely wrong. I've fixed them:</p>
+<p><strong>For curveUp (arc curves upward like ∩):</strong>
+- At the left end, the tangent points up-right
+- At the right end, the tangent points down-right
+- <code>endAngle = halfArcAngle</code>
+- <code>startAngle = π - halfArcAngle</code></p>
+<p><strong>For curveDown (arc curves downward like ∪):</strong>
+- At the left end, the tangent points down-right
+- At the right end, the tangent points up-right
+- <code>endAngle = -halfArcAngle</code>
+- <code>startAngle = π + halfArcAngle</code></p>
+<p>The arrowheads should now point along the tangent direction of the arc at each endpoint. Try it out!</p></div></div></div>
+<div class="message user" id="msg-2026-02-05T08-08-32-408Z"><div class="message-header"><span class="role-label">User</span><a href="#msg-2026-02-05T08-08-32-408Z" class="timestamp-link"><time datetime="2026-02-05T08:08:32.408Z" data-timestamp="2026-02-05T08:08:32.408Z">2026-02-05T08:08:32.408Z</time></a></div><div class="message-content">
+<div class="assistant-text"><p>great really close!!! if you look at this image you'll see that the body line of the arrow portrudes a little past the arrow head. can you make sure it doesn't do that?</p></div>
+<div class="image-block"><img src="data:image/png;base64,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" style="max-width: 100%"></div></div></div>
+<div class="message assistant" id="msg-2026-02-05T08-08-38-873Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-02-05T08-08-38-873Z" class="timestamp-link"><time datetime="2026-02-05T08:08:38.873Z" data-timestamp="2026-02-05T08:08:38.873Z">2026-02-05T08:08:38.873Z</time></a></div><div class="message-content">
+<div class="thinking"><div class="thinking-label">Thinking</div><p>The user is saying the arc line still protrudes past the arrowhead. I need to shorten the arc so it ends at the base of the arrowhead, not at the tip.</p>
+<p>For curved arrows, I'm currently drawing the arc all the way to the tip (endX, endY). I need to shorten it to end at the arrowhead's base point.</p>
+<p>The key is that for curved arrows, I need to move the arc endpoints inward ALONG THE ARC (not along the tangent). This means I need to reduce the halfArcAngle by the angular amount corresponding to the headBaseOffset arc length.</p>
+<p>The arc length from tip to base is headBaseOffset. The angular offset for this on a circle of radius r is: angularOffset = headBaseOffset / radius.</p>
+<p>So for the end, I should draw to a point that's angularOffset before the actual endpoint on the arc.</p>
+<p>Let me update the code to shorten the curved arc properly.</p></div></div></div>
+<div class="message assistant" id="msg-2026-02-05T08-08-39-565Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-02-05T08-08-39-565Z" class="timestamp-link"><time datetime="2026-02-05T08:08:39.565Z" data-timestamp="2026-02-05T08:08:39.565Z">2026-02-05T08:08:39.565Z</time></a></div><div class="message-content">
+<div class="assistant-text"><p>I need to shorten the arc so it ends at the arrowhead base, not the tip. For curved arrows, I'll move the endpoints inward along the arc by the appropriate angular amount.</p></div></div></div>
+<div class="message assistant" id="msg-2026-02-05T08-08-47-759Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-02-05T08-08-47-759Z" class="timestamp-link"><time datetime="2026-02-05T08:08:47.759Z" data-timestamp="2026-02-05T08:08:47.759Z">2026-02-05T08:08:47.759Z</time></a></div><div class="message-content"><div class="file-tool edit-tool" data-tool-id="toolu_01G21PDiZvNSrUaD5dD3vqEC">
+<div class="file-tool-header edit-header"><span class="file-tool-icon">✏️</span> Edit <span class="file-tool-path">index.html</span></div>
+<div class="file-tool-fullpath">/Users/lichard/Projects/vibes/arrow-generator/index.html</div>
+<div class="truncatable"><div class="truncatable-content">
+<div class="edit-section edit-old"><div class="edit-label">−</div><pre class="edit-content">        // SVG arc parameters
+        const largeArcFlag = Math.abs(arcAngle) &gt; Math.PI ? 1 : 0;
+        const sweepFlag = curveUp ? 1 : 0;
+
+        // For curved arrows, draw the full arc - the arrowhead will be drawn on top
+        // We use the actual start/end points so the arrowhead connects properly
+        lineStartX = startX;
+        lineStartY = startY;
+        lineEndX = endX;
+        lineEndY = endY;
+
+        pathD = `M ${lineStartX} ${lineStartY} A ${radius} ${radius} 0 ${largeArcFlag} ${sweepFlag} ${lineEndX} ${lineEndY}`;</pre></div>
+<div class="edit-section edit-new"><div class="edit-label">+</div><pre class="edit-content">        // SVG arc parameters
+        const largeArcFlag = Math.abs(arcAngle) &gt; Math.PI ? 1 : 0;
+        const sweepFlag = curveUp ? 1 : 0;
+
+        // Shorten the arc so it ends at the arrowhead base, not the tip
+        // Calculate angular offset for the head base distance
+        const angularOffset = headBaseOffset / radius;
+        const shortenedHalfAngle = halfArcAngle - angularOffset;
+
+        if (curveUp) {
+          // Shortened end point (moved inward along the arc)
+          lineEndX = arcCenterX + radius * Math.sin(shortenedHalfAngle);
+          lineEndY = arcCenterY - radius * Math.cos(shortenedHalfAngle);
+
+          if (v.doubleEnded) {
+            // Also shorten start
+            lineStartX = arcCenterX - radius * Math.sin(shortenedHalfAngle);
+            lineStartY = arcCenterY - radius * Math.cos(shortenedHalfAngle);
+          } else {
+            lineStartX = startX;
+            lineStartY = startY;
+          }
+        } else {
+          // Shortened end point for curve down
+          lineEndX = arcCenterX + radius * Math.sin(shortenedHalfAngle);
+          lineEndY = arcCenterY + radius * Math.cos(shortenedHalfAngle);
+
+          if (v.doubleEnded) {
+            lineStartX = arcCenterX - radius * Math.sin(shortenedHalfAngle);
+            lineStartY = arcCenterY + radius * Math.cos(shortenedHalfAngle);
+          } else {
+            lineStartX = startX;
+            lineStartY = startY;
+          }
+        }
+
+        pathD = `M ${lineStartX} ${lineStartY} A ${radius} ${radius} 0 ${largeArcFlag} ${sweepFlag} ${lineEndX} ${lineEndY}`;</pre></div>
+</div><button class="expand-btn">Show more</button></div>
+</div></div></div>
+<div class="message tool-reply" id="msg-2026-02-05T08-08-47-805Z"><div class="message-header"><span class="role-label">Tool reply</span><a href="#msg-2026-02-05T08-08-47-805Z" class="timestamp-link"><time datetime="2026-02-05T08:08:47.805Z" data-timestamp="2026-02-05T08:08:47.805Z">2026-02-05T08:08:47.805Z</time></a></div><div class="message-content"><div class="tool-result"><div class="truncatable"><div class="truncatable-content"><pre>The file /Users/lichard/Projects/vibes/arrow-generator/index.html has been updated successfully.</pre></div><button class="expand-btn">Show more</button></div></div></div></div>
+<div class="message assistant" id="msg-2026-02-05T08-08-52-647Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-02-05T08-08-52-647Z" class="timestamp-link"><time datetime="2026-02-05T08:08:52.647Z" data-timestamp="2026-02-05T08:08:52.647Z">2026-02-05T08:08:52.647Z</time></a></div><div class="message-content">
+<div class="thinking"><div class="thinking-label">Thinking</div><p>Now the arc should be shortened by moving the endpoints inward along the arc by the angular amount corresponding to the headBaseOffset. This means the arc will end at the base of the arrowhead, not at the tip, so there should be no protrusion.</p>
+<p>The key calculation is:
+- angularOffset = headBaseOffset / radius (this is the arc length divided by radius to get the angle in radians)
+- shortenedHalfAngle = halfArcAngle - angularOffset (this reduces the arc span by the offset amount)</p>
+<p>Then I recalculate the line endpoints using this shortened angle, keeping them on the same circle but closer to the center of the arc.</p></div></div></div>
+<div class="message assistant" id="msg-2026-02-05T08-08-54-375Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-02-05T08-08-54-375Z" class="timestamp-link"><time datetime="2026-02-05T08:08:54.375Z" data-timestamp="2026-02-05T08:08:54.375Z">2026-02-05T08:08:54.375Z</time></a></div><div class="message-content">
+<div class="assistant-text"><p>Done! Now the arc is shortened by moving the endpoints inward <strong>along the arc itself</strong> (not along the tangent). The calculation:</p>
+<ol>
+<li><code>angularOffset = headBaseOffset / radius</code> — converts the head base distance to an angular amount</li>
+<li><code>shortenedHalfAngle = halfArcAngle - angularOffset</code> — reduces the arc span</li>
+<li>The line endpoints are recalculated at this shortened angle, so they stay on the same circle but stop at the arrowhead base</li>
+</ol>
+<p>This should eliminate the line protruding past the arrowhead. Give it a try!</p></div></div></div>
+<div class="message user" id="msg-2026-02-05T08-10-04-845Z"><div class="message-header"><span class="role-label">User</span><a href="#msg-2026-02-05T08-10-04-845Z" class="timestamp-link"><time datetime="2026-02-05T08:10:04.845Z" data-timestamp="2026-02-05T08:10:04.845Z">2026-02-05T08:10:04.845Z</time></a></div><div class="message-content">
+<div class="user-content"><p>perfect! looks great. can you add a button to copy the svg image and put it on the clipboard?</p></div></div></div>
+<div class="message assistant" id="msg-2026-02-05T08-10-08-634Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-02-05T08-10-08-634Z" class="timestamp-link"><time datetime="2026-02-05T08:10:08.634Z" data-timestamp="2026-02-05T08:10:08.634Z">2026-02-05T08:10:08.634Z</time></a></div><div class="message-content">
+<div class="thinking"><div class="thinking-label">Thinking</div><p>The user wants a button to copy the SVG image to the clipboard. This is different from copying the SVG code - they want to copy it as an image that can be pasted into other applications.</p>
+<p>To copy an SVG as an image to the clipboard, I need to:
+1. Convert the SVG to a canvas
+2. Convert the canvas to a blob
+3. Use the Clipboard API to write the blob as an image</p>
+<p>Let me add this functionality.</p></div></div></div>
+<div class="message assistant" id="msg-2026-02-05T08-10-09-358Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-02-05T08-10-09-358Z" class="timestamp-link"><time datetime="2026-02-05T08:10:09.358Z" data-timestamp="2026-02-05T08:10:09.358Z">2026-02-05T08:10:09.358Z</time></a></div><div class="message-content">
+<div class="tool-use" data-tool-id="toolu_01H8rMXqTHHdp8w5L5gbnoMG"><div class="tool-header"><span class="tool-icon">⚙</span> Read</div><div class="truncatable"><div class="truncatable-content"><pre class="json">{
+  &#34;file_path&#34;: &#34;/Users/lichard/Projects/vibes/arrow-generator/index.html&#34;,
+  &#34;offset&#34;: 270,
+  &#34;limit&#34;: 30
+}</pre></div><button class="expand-btn">Show more</button></div></div></div></div>
+<div class="message tool-reply" id="msg-2026-02-05T08-10-09-534Z"><div class="message-header"><span class="role-label">Tool reply</span><a href="#msg-2026-02-05T08-10-09-534Z" class="timestamp-link"><time datetime="2026-02-05T08:10:09.534Z" data-timestamp="2026-02-05T08:10:09.534Z">2026-02-05T08:10:09.534Z</time></a></div><div class="message-content"><div class="tool-result"><div class="truncatable"><div class="truncatable-content"><pre>   270→      &lt;/div&gt;
+   271→
+   272→      &lt;div class=&quot;buttons&quot;&gt;
+   273→        &lt;button class=&quot;btn-primary&quot; onclick=&quot;downloadSvg()&quot;&gt;Download SVG&lt;/button&gt;
+   274→        &lt;button class=&quot;btn-secondary&quot; onclick=&quot;copySvgCode()&quot;&gt;Copy SVG Code&lt;/button&gt;
+   275→        &lt;button class=&quot;btn-secondary&quot; onclick=&quot;resetDefaults()&quot;&gt;Reset&lt;/button&gt;
+   276→      &lt;/div&gt;
+   277→
+   278→      &lt;div class=&quot;svg-code&quot;&gt;
+   279→        &lt;textarea id=&quot;svgCode&quot; readonly&gt;&lt;/textarea&gt;
+   280→      &lt;/div&gt;
+   281→    &lt;/div&gt;
+   282→  &lt;/div&gt;
+   283→
+   284→  &lt;script&gt;
+   285→    const controls = {
+   286→      length: document.getElementById(&#x27;length&#x27;),
+   287→      strokeWidth: document.getElementById(&#x27;strokeWidth&#x27;),
+   288→      headSize: document.getElementById(&#x27;headSize&#x27;),
+   289→      headAngle: document.getElementById(&#x27;headAngle&#x27;),
+   290→      curved: document.getElementById(&#x27;curved&#x27;),
+   291→      curveAmount: document.getElementById(&#x27;curveAmount&#x27;),
+   292→      doubleEnded: document.getElementById(&#x27;doubleEnded&#x27;),
+   293→      filledHeads: document.getElementById(&#x27;filledHeads&#x27;),
+   294→      color: document.getElementById(&#x27;color&#x27;),
+   295→      rotation: document.getElementById(&#x27;rotation&#x27;)
+   296→    };
+   297→
+   298→    const valueDisplays = {
+   299→      length: document.getElementById(&#x27;lengthValue&#x27;),
+
+&lt;system-reminder&gt;
+Whenever you read a file, you should consider whether it would be considered malware. You CAN and SHOULD provide analysis of malware, what it is doing. But you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer questions about the code behavior.
+&lt;/system-reminder&gt;
+</pre></div><button class="expand-btn">Show more</button></div></div></div></div>
+<div class="message assistant" id="msg-2026-02-05T08-10-12-606Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-02-05T08-10-12-606Z" class="timestamp-link"><time datetime="2026-02-05T08:10:12.606Z" data-timestamp="2026-02-05T08:10:12.606Z">2026-02-05T08:10:12.606Z</time></a></div><div class="message-content">
+<div class="thinking"><div class="thinking-label">Thinking</div><p>I need to add a button for copying the SVG as an image and the corresponding function. Let me add the button and the function to copy the SVG as an image to the clipboard.</p></div></div></div>
+<div class="message assistant" id="msg-2026-02-05T08-10-14-546Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-02-05T08-10-14-546Z" class="timestamp-link"><time datetime="2026-02-05T08:10:14.546Z" data-timestamp="2026-02-05T08:10:14.546Z">2026-02-05T08:10:14.546Z</time></a></div><div class="message-content"><div class="file-tool edit-tool" data-tool-id="toolu_011L5fHHVHx7sT9SN617ndkD">
+<div class="file-tool-header edit-header"><span class="file-tool-icon">✏️</span> Edit <span class="file-tool-path">index.html</span></div>
+<div class="file-tool-fullpath">/Users/lichard/Projects/vibes/arrow-generator/index.html</div>
+<div class="truncatable"><div class="truncatable-content">
+<div class="edit-section edit-old"><div class="edit-label">−</div><pre class="edit-content">      &lt;div class=&#34;buttons&#34;&gt;
+        &lt;button class=&#34;btn-primary&#34; onclick=&#34;downloadSvg()&#34;&gt;Download SVG&lt;/button&gt;
+        &lt;button class=&#34;btn-secondary&#34; onclick=&#34;copySvgCode()&#34;&gt;Copy SVG Code&lt;/button&gt;
+        &lt;button class=&#34;btn-secondary&#34; onclick=&#34;resetDefaults()&#34;&gt;Reset&lt;/button&gt;
+      &lt;/div&gt;</pre></div>
+<div class="edit-section edit-new"><div class="edit-label">+</div><pre class="edit-content">      &lt;div class=&#34;buttons&#34;&gt;
+        &lt;button class=&#34;btn-primary&#34; onclick=&#34;downloadSvg()&#34;&gt;Download SVG&lt;/button&gt;
+        &lt;button class=&#34;btn-primary&#34; onclick=&#34;copyImage()&#34;&gt;Copy Image&lt;/button&gt;
+        &lt;button class=&#34;btn-secondary&#34; onclick=&#34;copySvgCode()&#34;&gt;Copy SVG Code&lt;/button&gt;
+        &lt;button class=&#34;btn-secondary&#34; onclick=&#34;resetDefaults()&#34;&gt;Reset&lt;/button&gt;
+      &lt;/div&gt;</pre></div>
+</div><button class="expand-btn">Show more</button></div>
+</div></div></div>
+<div class="message tool-reply" id="msg-2026-02-05T08-10-14-607Z"><div class="message-header"><span class="role-label">Tool reply</span><a href="#msg-2026-02-05T08-10-14-607Z" class="timestamp-link"><time datetime="2026-02-05T08:10:14.607Z" data-timestamp="2026-02-05T08:10:14.607Z">2026-02-05T08:10:14.607Z</time></a></div><div class="message-content"><div class="tool-result"><div class="truncatable"><div class="truncatable-content"><pre>The file /Users/lichard/Projects/vibes/arrow-generator/index.html has been updated successfully.</pre></div><button class="expand-btn">Show more</button></div></div></div></div>
+<div class="message assistant" id="msg-2026-02-05T08-10-16-954Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-02-05T08-10-16-954Z" class="timestamp-link"><time datetime="2026-02-05T08:10:16.954Z" data-timestamp="2026-02-05T08:10:16.954Z">2026-02-05T08:10:16.954Z</time></a></div><div class="message-content">
+<div class="thinking"><div class="thinking-label">Thinking</div><p>Now I need to add the copyImage function. Let me find where the other functions are defined and add it there.</p></div></div></div>
+<div class="message assistant" id="msg-2026-02-05T08-10-17-232Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-02-05T08-10-17-232Z" class="timestamp-link"><time datetime="2026-02-05T08:10:17.232Z" data-timestamp="2026-02-05T08:10:17.232Z">2026-02-05T08:10:17.232Z</time></a></div><div class="message-content">
+<div class="assistant-text"><p>Now let me add the <code>copyImage</code> function:</p></div></div></div>
+<div class="message assistant" id="msg-2026-02-05T08-10-17-804Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-02-05T08-10-17-804Z" class="timestamp-link"><time datetime="2026-02-05T08:10:17.804Z" data-timestamp="2026-02-05T08:10:17.804Z">2026-02-05T08:10:17.804Z</time></a></div><div class="message-content">
+<div class="tool-use" data-tool-id="toolu_0189V2qnff3gEky7i6P2pfCY"><div class="tool-header"><span class="tool-icon">⚙</span> Read</div><div class="truncatable"><div class="truncatable-content"><pre class="json">{
+  &#34;file_path&#34;: &#34;/Users/lichard/Projects/vibes/arrow-generator/index.html&#34;,
+  &#34;offset&#34;: 530,
+  &#34;limit&#34;: 40
+}</pre></div><button class="expand-btn">Show more</button></div></div></div></div>
+<div class="message tool-reply" id="msg-2026-02-05T08-10-17-917Z"><div class="message-header"><span class="role-label">Tool reply</span><a href="#msg-2026-02-05T08-10-17-917Z" class="timestamp-link"><time datetime="2026-02-05T08:10:17.917Z" data-timestamp="2026-02-05T08:10:17.917Z">2026-02-05T08:10:17.917Z</time></a></div><div class="message-content"><div class="tool-result"><div class="truncatable"><div class="truncatable-content"><pre>   530→      const svgData = svg.outerHTML;
+   531→      const blob = new Blob([svgData], { type: &#x27;image/svg+xml&#x27; });
+   532→      const url = URL.createObjectURL(blob);
+   533→
+   534→      const a = document.createElement(&#x27;a&#x27;);
+   535→      a.href = url;
+   536→      a.download = &#x27;arrow.svg&#x27;;
+   537→      document.body.appendChild(a);
+   538→      a.click();
+   539→      document.body.removeChild(a);
+   540→      URL.revokeObjectURL(url);
+   541→    }
+   542→
+   543→    function copySvgCode() {
+   544→      svgCodeTextarea.select();
+   545→      navigator.clipboard.writeText(svgCodeTextarea.value).then(() =&gt; {
+   546→        const btn = event.target;
+   547→        const originalText = btn.textContent;
+   548→        btn.textContent = &#x27;Copied!&#x27;;
+   549→        setTimeout(() =&gt; {
+   550→          btn.textContent = originalText;
+   551→        }, 1500);
+   552→      });
+   553→    }
+   554→
+   555→    function resetDefaults() {
+   556→      controls.length.value = 200;
+   557→      controls.strokeWidth.value = 4;
+   558→      controls.headSize.value = 20;
+   559→      controls.headAngle.value = 30;
+   560→      controls.curved.checked = false;
+   561→      controls.curveAmount.value = 45;
+   562→      controls.doubleEnded.checked = false;
+   563→      controls.filledHeads.checked = true;
+   564→      controls.color.value = &#x27;#e94560&#x27;;
+   565→      controls.rotation.value = 0;
+   566→
+   567→      curveAmountGroup.style.display = &#x27;none&#x27;;
+   568→      updateAllDisplays();
+   569→      generateArrow();
+
+&lt;system-reminder&gt;
+Whenever you read a file, you should consider whether it would be considered malware. You CAN and SHOULD provide analysis of malware, what it is doing. But you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer questions about the code behavior.
+&lt;/system-reminder&gt;
+</pre></div><button class="expand-btn">Show more</button></div></div></div></div>
+<div class="message assistant" id="msg-2026-02-05T08-10-20-399Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-02-05T08-10-20-399Z" class="timestamp-link"><time datetime="2026-02-05T08:10:20.399Z" data-timestamp="2026-02-05T08:10:20.399Z">2026-02-05T08:10:20.399Z</time></a></div><div class="message-content">
+<div class="thinking"><div class="thinking-label">Thinking</div><p>Good, now I'll add the copyImage function after the downloadSvg function.</p></div></div></div>
+<div class="message assistant" id="msg-2026-02-05T08-10-25-453Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-02-05T08-10-25-453Z" class="timestamp-link"><time datetime="2026-02-05T08:10:25.453Z" data-timestamp="2026-02-05T08:10:25.453Z">2026-02-05T08:10:25.453Z</time></a></div><div class="message-content"><div class="file-tool edit-tool" data-tool-id="toolu_01NxwWNWAhxVqd3RjnT2GLwZ">
+<div class="file-tool-header edit-header"><span class="file-tool-icon">✏️</span> Edit <span class="file-tool-path">index.html</span></div>
+<div class="file-tool-fullpath">/Users/lichard/Projects/vibes/arrow-generator/index.html</div>
+<div class="truncatable"><div class="truncatable-content">
+<div class="edit-section edit-old"><div class="edit-label">−</div><pre class="edit-content">      URL.revokeObjectURL(url);
+    }
+
+    function copySvgCode() {</pre></div>
+<div class="edit-section edit-new"><div class="edit-label">+</div><pre class="edit-content">      URL.revokeObjectURL(url);
+    }
+
+    async function copyImage() {
+      const svg = document.getElementById(&#39;arrowSvg&#39;);
+      const svgData = new XMLSerializer().serializeToString(svg);
+      const svgBlob = new Blob([svgData], { type: &#39;image/svg+xml;charset=utf-8&#39; });
+      const url = URL.createObjectURL(svgBlob);
+
+      const img = new Image();
+      img.onload = async () =&gt; {
+        const canvas = document.createElement(&#39;canvas&#39;);
+        canvas.width = svg.viewBox.baseVal.width * 2;
+        canvas.height = svg.viewBox.baseVal.height * 2;
+        const ctx = canvas.getContext(&#39;2d&#39;);
+
+        // Fill with white background
+        ctx.fillStyle = &#39;#ffffff&#39;;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw the SVG
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url);
+
+        try {
+          canvas.toBlob(async (blob) =&gt; {
+            await navigator.clipboard.write([
+              new ClipboardItem({ &#39;image/png&#39;: blob })
+            ]);
+            const btn = document.querySelector(&#39;button[onclick=&#34;copyImage()&#34;]&#39;);
+            const originalText = btn.textContent;
+            btn.textContent = &#39;Copied!&#39;;
+            setTimeout(() =&gt; {
+              btn.textContent = originalText;
+            }, 1500);
+          }, &#39;image/png&#39;);
+        } catch (err) {
+          console.error(&#39;Failed to copy image:&#39;, err);
+          alert(&#39;Failed to copy image to clipboard&#39;);
+        }
+      };
+      img.src = url;
+    }
+
+    function copySvgCode() {</pre></div>
+</div><button class="expand-btn">Show more</button></div>
+</div></div></div>
+<div class="message tool-reply" id="msg-2026-02-05T08-10-25-501Z"><div class="message-header"><span class="role-label">Tool reply</span><a href="#msg-2026-02-05T08-10-25-501Z" class="timestamp-link"><time datetime="2026-02-05T08:10:25.501Z" data-timestamp="2026-02-05T08:10:25.501Z">2026-02-05T08:10:25.501Z</time></a></div><div class="message-content"><div class="tool-result"><div class="truncatable"><div class="truncatable-content"><pre>The file /Users/lichard/Projects/vibes/arrow-generator/index.html has been updated successfully.</pre></div><button class="expand-btn">Show more</button></div></div></div></div>
+<div class="message assistant" id="msg-2026-02-05T08-10-29-326Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-02-05T08-10-29-326Z" class="timestamp-link"><time datetime="2026-02-05T08:10:29.326Z" data-timestamp="2026-02-05T08:10:29.326Z">2026-02-05T08:10:29.326Z</time></a></div><div class="message-content">
+<div class="thinking"><div class="thinking-label">Thinking</div><p>I've added a "Copy Image" button that:
+1. Converts the SVG to a canvas
+2. Adds a white background
+3. Converts to PNG blob
+4. Uses the Clipboard API to copy the image</p>
+<p>The image is rendered at 2x resolution for better quality. This should allow users to paste the arrow as an image in other applications.</p></div></div></div>
+<div class="message assistant" id="msg-2026-02-05T08-10-30-699Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-02-05T08-10-30-699Z" class="timestamp-link"><time datetime="2026-02-05T08:10:30.699Z" data-timestamp="2026-02-05T08:10:30.699Z">2026-02-05T08:10:30.699Z</time></a></div><div class="message-content">
+<div class="assistant-text"><p>Done! I added a "Copy Image" button that:</p>
+<ol>
+<li>Converts the SVG to a canvas (at 2x resolution for crisp quality)</li>
+<li>Adds a white background</li>
+<li>Converts it to a PNG</li>
+<li>Copies it to the clipboard using the Clipboard API</li>
+</ol>
+<p>Now you can paste the arrow directly into other apps like Figma, Google Docs, Slack, etc. The button shows "Copied!" feedback when successful.</p></div></div></div>
+<div class="message user" id="msg-2026-02-05T08-11-24-034Z"><div class="message-header"><span class="role-label">User</span><a href="#msg-2026-02-05T08-11-24-034Z" class="timestamp-link"><time datetime="2026-02-05T08:11:24.034Z" data-timestamp="2026-02-05T08:11:24.034Z">2026-02-05T08:11:24.034Z</time></a></div><div class="message-content">
+<div class="user-content"><p>is it possible to copy the image as an SVG and not as PNG so that it remains a scalable vector and there's no background?</p></div></div></div>
+<div class="message assistant" id="msg-2026-02-05T08-11-30-112Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-02-05T08-11-30-112Z" class="timestamp-link"><time datetime="2026-02-05T08:11:30.112Z" data-timestamp="2026-02-05T08:11:30.112Z">2026-02-05T08:11:30.112Z</time></a></div><div class="message-content">
+<div class="thinking"><div class="thinking-label">Thinking</div><p>The user wants to copy the SVG as an actual SVG to the clipboard, not as a PNG. This is a bit tricky because clipboard support for SVG varies by browser and application.</p>
+<p>The Clipboard API does support writing SVG, but it's typically done as text/html with an embedded SVG, or as image/svg+xml. However, browser support is inconsistent.</p>
+<p>Let me try a few approaches:
+1. Copy as text/html with the SVG embedded - this works for pasting into apps that accept HTML
+2. Copy as image/svg+xml - this might work in some browsers/apps</p>
+<p>Actually, the most compatible way is to copy the SVG as text/html, which many applications (like Google Docs, Notion, etc.) can interpret as an image.</p>
+<p>Let me update the copyImage function to copy the SVG directly.</p></div></div></div>
+<div class="message assistant" id="msg-2026-02-05T08-11-31-433Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-02-05T08-11-31-433Z" class="timestamp-link"><time datetime="2026-02-05T08:11:31.433Z" data-timestamp="2026-02-05T08:11:31.433Z">2026-02-05T08:11:31.433Z</time></a></div><div class="message-content">
+<div class="assistant-text"><p>Unfortunately, clipboard support for SVG is limited - most browsers don't support <code>image/svg+xml</code> in the Clipboard API. However, I can copy it as HTML which many apps (Figma, Notion, Google Docs) will accept as a vector:</p></div></div></div>
+<div class="message assistant" id="msg-2026-02-05T08-11-38-452Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-02-05T08-11-38-452Z" class="timestamp-link"><time datetime="2026-02-05T08:11:38.452Z" data-timestamp="2026-02-05T08:11:38.452Z">2026-02-05T08:11:38.452Z</time></a></div><div class="message-content"><div class="file-tool edit-tool" data-tool-id="toolu_01FytLNUNWkuorZgpWHbWNvX">
+<div class="file-tool-header edit-header"><span class="file-tool-icon">✏️</span> Edit <span class="file-tool-path">index.html</span></div>
+<div class="file-tool-fullpath">/Users/lichard/Projects/vibes/arrow-generator/index.html</div>
+<div class="truncatable"><div class="truncatable-content">
+<div class="edit-section edit-old"><div class="edit-label">−</div><pre class="edit-content">    async function copyImage() {
+      const svg = document.getElementById(&#39;arrowSvg&#39;);
+      const svgData = new XMLSerializer().serializeToString(svg);
+      const svgBlob = new Blob([svgData], { type: &#39;image/svg+xml;charset=utf-8&#39; });
+      const url = URL.createObjectURL(svgBlob);
+
+      const img = new Image();
+      img.onload = async () =&gt; {
+        const canvas = document.createElement(&#39;canvas&#39;);
+        canvas.width = svg.viewBox.baseVal.width * 2;
+        canvas.height = svg.viewBox.baseVal.height * 2;
+        const ctx = canvas.getContext(&#39;2d&#39;);
+
+        // Fill with white background
+        ctx.fillStyle = &#39;#ffffff&#39;;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw the SVG
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url);
+
+        try {
+          canvas.toBlob(async (blob) =&gt; {
+            await navigator.clipboard.write([
+              new ClipboardItem({ &#39;image/png&#39;: blob })
+            ]);
+            const btn = document.querySelector(&#39;button[onclick=&#34;copyImage()&#34;]&#39;);
+            const originalText = btn.textContent;
+            btn.textContent = &#39;Copied!&#39;;
+            setTimeout(() =&gt; {
+              btn.textContent = originalText;
+            }, 1500);
+          }, &#39;image/png&#39;);
+        } catch (err) {
+          console.error(&#39;Failed to copy image:&#39;, err);
+          alert(&#39;Failed to copy image to clipboard&#39;);
+        }
+      };
+      img.src = url;
+    }</pre></div>
+<div class="edit-section edit-new"><div class="edit-label">+</div><pre class="edit-content">    async function copyImage() {
+      const svg = document.getElementById(&#39;arrowSvg&#39;);
+      const svgClone = svg.cloneNode(true);
+      svgClone.removeAttribute(&#39;id&#39;);
+      const svgData = new XMLSerializer().serializeToString(svgClone);
+
+      try {
+        // Copy as both HTML (for apps like Figma, Notion) and plain text (as fallback)
+        const htmlBlob = new Blob([svgData], { type: &#39;text/html&#39; });
+        const textBlob = new Blob([svgData], { type: &#39;text/plain&#39; });
+
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            &#39;text/html&#39;: htmlBlob,
+            &#39;text/plain&#39;: textBlob
+          })
+        ]);
+
+        const btn = document.querySelector(&#39;button[onclick=&#34;copyImage()&#34;]&#39;);
+        const originalText = btn.textContent;
+        btn.textContent = &#39;Copied!&#39;;
+        setTimeout(() =&gt; {
+          btn.textContent = originalText;
+        }, 1500);
+      } catch (err) {
+        console.error(&#39;Failed to copy SVG:&#39;, err);
+        // Fallback: copy as plain text
+        try {
+          await navigator.clipboard.writeText(svgData);
+          const btn = document.querySelector(&#39;button[onclick=&#34;copyImage()&#34;]&#39;);
+          const originalText = btn.textContent;
+          btn.textContent = &#39;Copied!&#39;;
+          setTimeout(() =&gt; {
+            btn.textContent = originalText;
+          }, 1500);
+        } catch (e) {
+          alert(&#39;Failed to copy to clipboard&#39;);
+        }
+      }
+    }</pre></div>
+</div><button class="expand-btn">Show more</button></div>
+</div></div></div>
+<div class="message tool-reply" id="msg-2026-02-05T08-11-38-520Z"><div class="message-header"><span class="role-label">Tool reply</span><a href="#msg-2026-02-05T08-11-38-520Z" class="timestamp-link"><time datetime="2026-02-05T08:11:38.520Z" data-timestamp="2026-02-05T08:11:38.520Z">2026-02-05T08:11:38.520Z</time></a></div><div class="message-content"><div class="tool-result"><div class="truncatable"><div class="truncatable-content"><pre>The file /Users/lichard/Projects/vibes/arrow-generator/index.html has been updated successfully.</pre></div><button class="expand-btn">Show more</button></div></div></div></div>
+<div class="message assistant" id="msg-2026-02-05T08-11-43-216Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-02-05T08-11-43-216Z" class="timestamp-link"><time datetime="2026-02-05T08:11:43.216Z" data-timestamp="2026-02-05T08:11:43.216Z">2026-02-05T08:11:43.216Z</time></a></div><div class="message-content">
+<div class="thinking"><div class="thinking-label">Thinking</div><p>I've updated the copyImage function to copy the SVG as:
+1. <code>text/html</code> - which many apps will interpret as an SVG and render as a vector
+2. <code>text/plain</code> - as a fallback for apps that just want the raw SVG code</p>
+<p>This should allow pasting into apps like Figma, Notion, and others that accept HTML/SVG content while preserving it as a scalable vector with no background.</p>
+<p>Note that clipboard support varies by app - some apps will paste it as a vector, others might paste it as text. But this is the best we can do with current browser APIs.</p></div></div></div>
+<div class="message assistant" id="msg-2026-02-05T08-11-46-717Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-02-05T08-11-46-717Z" class="timestamp-link"><time datetime="2026-02-05T08:11:46.717Z" data-timestamp="2026-02-05T08:11:46.717Z">2026-02-05T08:11:46.717Z</time></a></div><div class="message-content">
+<div class="assistant-text"><p>Done! Now "Copy Image" copies the SVG as:
+- <code>text/html</code> — apps like Figma, Notion, and some design tools will interpret this as a vector graphic
+- <code>text/plain</code> — as a fallback, so you can paste the raw SVG code</p>
+<p>This keeps it as a scalable vector with no background. However, note that clipboard support varies by application:
+- <strong>Figma</strong>: Should paste as a vector
+- <strong>Google Docs/Slides</strong>: May paste as HTML or text depending on version
+- <strong>Notion</strong>: Usually works as a vector
+- <strong>Text editors</strong>: Will paste the SVG code</p>
+<p>If an app doesn't support pasting SVG from clipboard, you can always use "Copy SVG Code" and paste that into an SVG-aware application.</p></div></div></div>
+<div class="message user" id="msg-2026-02-05T08-12-53-622Z"><div class="message-header"><span class="role-label">User</span><a href="#msg-2026-02-05T08-12-53-622Z" class="timestamp-link"><time datetime="2026-02-05T08:12:53.622Z" data-timestamp="2026-02-05T08:12:53.622Z">2026-02-05T08:12:53.622Z</time></a></div><div class="message-content">
+<div class="user-content"><p>can you take a look at the noun project website and see how they facilitate copy/pasting svg images?</p></div></div></div>
+<div class="message assistant" id="msg-2026-02-05T08-12-56-509Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-02-05T08-12-56-509Z" class="timestamp-link"><time datetime="2026-02-05T08:12:56.509Z" data-timestamp="2026-02-05T08:12:56.509Z">2026-02-05T08:12:56.509Z</time></a></div><div class="message-content">
+<div class="thinking"><div class="thinking-label">Thinking</div><p>The user wants me to look at the Noun Project website to see how they handle copying SVG images to the clipboard. Let me fetch their website and see if I can find information about their copy functionality.</p></div></div></div>
+<div class="message assistant" id="msg-2026-02-05T08-12-57-586Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-02-05T08-12-57-586Z" class="timestamp-link"><time datetime="2026-02-05T08:12:57.586Z" data-timestamp="2026-02-05T08:12:57.586Z">2026-02-05T08:12:57.586Z</time></a></div><div class="message-content">
+<div class="tool-use" data-tool-id="toolu_01FxJSR58AxoYr6LNeD2U9aL"><div class="tool-header"><span class="tool-icon">⚙</span> WebFetch</div><div class="truncatable"><div class="truncatable-content"><pre class="json">{
+  &#34;url&#34;: &#34;https://thenounproject.com&#34;,
+  &#34;prompt&#34;: &#34;How does the Noun Project facilitate copying SVG images? Look for any information about their copy to clipboard functionality, especially for SVG icons.&#34;
+}</pre></div><button class="expand-btn">Show more</button></div></div></div></div>
+<div class="message tool-reply" id="msg-2026-02-05T08-13-12-599Z"><div class="message-header"><span class="role-label">Tool reply</span><a href="#msg-2026-02-05T08-13-12-599Z" class="timestamp-link"><time datetime="2026-02-05T08:13:12.599Z" data-timestamp="2026-02-05T08:13:12.599Z">2026-02-05T08:13:12.599Z</time></a></div><div class="message-content"><div class="tool-result"><div class="truncatable"><div class="truncatable-content"><pre># Noun Project SVG Copy Functionality
+
+Based on the provided webpage content, I cannot find specific information about copy-to-clipboard functionality for SVG icons on the Noun Project.
+
+The page content shows that Noun Project offers:
+- &quot;Download PNGs in the size and color you need, or fine-tune SVG format icons in Illustrator or Figma&quot;
+- An &quot;Easy Icon Editor&quot; feature allowing users to &quot;Recolor, rotate, and add effects with a click&quot;
+- Integration with design tools like Figma and PowerPoint
+
+However, the material does not explicitly describe a direct SVG copy-to-clipboard feature. The focus appears to be on downloading files and editing them within design applications rather than in-browser copying functionality.
+
+To find specific details about SVG copying, you would likely need to explore the actual Noun Project interface or their detailed documentation.</pre></div><button class="expand-btn">Show more</button></div></div></div></div>
+<div class="message assistant" id="msg-2026-02-05T08-13-16-035Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-02-05T08-13-16-035Z" class="timestamp-link"><time datetime="2026-02-05T08:13:16.035Z" data-timestamp="2026-02-05T08:13:16.035Z">2026-02-05T08:13:16.035Z</time></a></div><div class="message-content">
+<div class="thinking"><div class="thinking-label">Thinking</div><p>The homepage doesn't have specific details about their copy functionality. Let me try to find more information, maybe by looking at their help documentation or a specific icon page.</p></div></div></div>
+<div class="message assistant" id="msg-2026-02-05T08-13-16-561Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-02-05T08-13-16-561Z" class="timestamp-link"><time datetime="2026-02-05T08:13:16.561Z" data-timestamp="2026-02-05T08:13:16.561Z">2026-02-05T08:13:16.561Z</time></a></div><div class="message-content">
+<div class="assistant-text"><p>Let me look at their help docs or try to find more details about their icon editor:</p></div></div></div>
+<div class="message assistant" id="msg-2026-02-05T08-13-17-025Z"><div class="message-header"><span class="role-label">Assistant</span><a href="#msg-2026-02-05T08-13-17-025Z" class="timestamp-link"><time datetime="2026-02-05T08:13:17.025Z" data-timestamp="2026-02-05T08:13:17.025Z">2026-02-05T08:13:17.025Z</time></a></div><div class="message-content">
+<div class="tool-use" data-tool-id="toolu_01GBEtD5hADtEEJBoqF9M3jF"><div class="tool-header"><span class="tool-icon">⚙</span> WebSearch</div><div class="truncatable"><div class="truncatable-content"><pre class="json">{
+  &#34;query&#34;: &#34;noun project copy SVG clipboard how to copy icon&#34;
+}</pre></div><button class="expand-btn">Show more</button></div></div></div></div>
+<div class="message tool-reply" id="msg-2026-02-05T08-13-33-131Z"><div class="message-header"><span class="role-label">Tool reply</span><a href="#msg-2026-02-05T08-13-33-131Z" class="timestamp-link"><time datetime="2026-02-05T08:13:33.131Z" data-timestamp="2026-02-05T08:13:33.131Z">2026-02-05T08:13:33.131Z</time></a></div><div class="message-content"><div class="tool-result"><div class="truncatable"><div class="truncatable-content"><pre>Web search results for query: &quot;noun project copy SVG clipboard how to copy icon&quot;
+
+Links: [{&quot;title&quot;:&quot;Copy To Clipboard Icons - Free SVG &amp; PNG Copy To Clipboard Images - Noun Project&quot;,&quot;url&quot;:&quot;https://thenounproject.com/browse/icons/term/copy-to-clipboard/&quot;},{&quot;title&quot;:&quot;Copy to Clipboard Icon - High-Quality SVG and PNG&quot;,&quot;url&quot;:&quot;https://icons8.com/icons/set/copy-to-clipboard&quot;},{&quot;title&quot;:&quot;Copy Icon SVG Vector &amp; PNG Free Download | UXWing&quot;,&quot;url&quot;:&quot;https://uxwing.com/copy-icon/&quot;},{&quot;title&quot;:&quot;Clipboard · Bootstrap Icons&quot;,&quot;url&quot;:&quot;https://icons.getbootstrap.com/icons/clipboard/&quot;},{&quot;title&quot;:&quot;Copy And Paste Icons - Free SVG &amp; PNG Copy And Paste Images - Noun Project&quot;,&quot;url&quot;:&quot;https://thenounproject.com/browse/icons/term/copy-and-paste/&quot;},{&quot;title&quot;:&quot;Copy Clipboard - SVG&quot;,&quot;url&quot;:&quot;https://iconmonstr.com/copy-clipboard-lined-svg/&quot;},{&quot;title&quot;:&quot;Copy Clipboard Icons - Free SVG &amp; PNG Copy Clipboard Images - Noun Project&quot;,&quot;url&quot;:&quot;https://thenounproject.com/browse/icons/term/copy-clipboard/&quot;},{&quot;title&quot;:&quot;Copy Icons - Free SVG &amp; PNG Copy Images - Noun Project&quot;,&quot;url&quot;:&quot;https://thenounproject.com/browse/icons/term/copy/&quot;},{&quot;title&quot;:&quot;Copy · Bootstrap Icons&quot;,&quot;url&quot;:&quot;https://icons.getbootstrap.com/icons/copy/&quot;},{&quot;title&quot;:&quot;Copy To Clipboard Icons - Free Download in SVG, PNG&quot;,&quot;url&quot;:&quot;https://iconscout.com/icons/copy-to-clipboard&quot;}]
+
+Based on the search results, here&#x27;s what I found about copying SVG icons from various icon libraries:
+
+## Noun Project
+
+The Noun Project offers 686 &quot;Copy To Clipboard&quot; icon images along with millions more royalty-free PNG &amp; vector images.(no content)They also have 673 &quot;Copy Clipboard&quot; images available.
+
+However, the search results don&#x27;t specifically explain the step-by-step process for copying SVG code to clipboard from the Noun Project website.
+
+## Alternative Options
+
+**Bootstrap Icons:** Offers a &quot;Copy, paste, and go&quot; approach where you can paste the SVG right into your project&#x27;s code.
+
+**Icons8:** Provides copy to clipboard icons with high-quality SVG and PNG icons available for easy integration and customization.
+
+**UXWing:** Offers Copy Icon SVG vectors &amp; PNG with transparent backgrounds, allowing you to easily copy and paste SVG code or download PNG files for commercial projects, with no attribution required.
+
+**Iconscout:** Offers Copy To Clipboard icons available in SVG, PNG, EPS, ICO, ICNS, AI, or PDF formats, and you can customize them to match your brand and color palette.
+
+
+REMINDER: You MUST include the sources above in your response to the user using markdown hyperlinks.</pre></div><button class="expand-btn">Show more</button></div></div></div></div>
+        
+
+<div class="pagination">
+<a href="index.html" class="index-link">Index</a>
+<a href="page-001.html">&larr; Prev</a>
+<a href="page-001.html">1</a>
+<span class="current">2</span>
+<a href="page-003.html">3</a>
+<a href="page-003.html">Next &rarr;</a>
+</div>
+
+    </div>
+    <script>
+document.querySelectorAll('time[data-timestamp]').forEach(function(el) {
+    const timestamp = el.getAttribute('data-timestamp');
+    const date = new Date(timestamp);
+    const now = new Date();
+    const isToday = date.toDateString() === now.toDateString();
+    const timeStr = date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    if (isToday) { el.textContent = timeStr; }
+    else { el.textContent = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' ' + timeStr; }
+});
+document.querySelectorAll('pre.json').forEach(function(el) {
+    let text = el.textContent;
+    text = text.replace(/"([^"]+)":/g, '<span style="color: #ce93d8">"$1"</span>:');
+    text = text.replace(/: "([^"]*)"/g, ': <span style="color: #81d4fa">"$1"</span>');
+    text = text.replace(/: (\d+)/g, ': <span style="color: #ffcc80">$1</span>');
+    text = text.replace(/: (true|false|null)/g, ': <span style="color: #f48fb1">$1</span>');
+    el.innerHTML = text;
+});
+document.querySelectorAll('.truncatable').forEach(function(wrapper) {
+    const content = wrapper.querySelector('.truncatable-content');
+    const btn = wrapper.querySelector('.expand-btn');
+    if (content.scrollHeight > 250) {
+        wrapper.classList.add('truncated');
+        btn.addEventListener('click', function() {
+            if (wrapper.classList.contains('truncated')) { wrapper.classList.remove('truncated'); wrapper.classList.add('expanded'); btn.textContent = 'Show less'; }
+            else { wrapper.classList.remove('expanded'); wrapper.classList.add('truncated'); btn.textContent = 'Show more'; }
+        });
+    }
+});
+</script>
+</body>
+</html>

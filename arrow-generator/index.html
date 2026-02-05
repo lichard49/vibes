@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arrow SVG Designer</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #1a1a2e;
+      color: #eee;
+      min-height: 100vh;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #fff;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 30px;
+    }
+
+    @media (max-width: 800px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .controls {
+      background: #16213e;
+      padding: 20px;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 14px;
+      color: #aaa;
+      font-weight: 500;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: #e94560;
+    }
+
+    input[type="color"] {
+      width: 100%;
+      height: 40px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      background: transparent;
+    }
+
+    input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      accent-color: #e94560;
+    }
+
+    .checkbox-group {
+      flex-direction: row;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .checkbox-group label {
+      color: #eee;
+    }
+
+    .value-display {
+      font-size: 12px;
+      color: #e94560;
+      font-weight: bold;
+    }
+
+    .preview-area {
+      background: #16213e;
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 400px;
+    }
+
+    .preview-canvas {
+      background: #fff;
+      border-radius: 8px;
+      width: 100%;
+      max-width: 600px;
+      aspect-ratio: 16/9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      transition: background 0.3s ease;
+    }
+
+    #arrowSvg {
+      width: 90%;
+      height: 90%;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    button {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: transform 0.1s, background 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .btn-primary {
+      background: #e94560;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #ff6b6b;
+    }
+
+    .btn-secondary {
+      background: #0f3460;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #1a4a7a;
+    }
+
+    .svg-code {
+      margin-top: 20px;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .svg-code textarea {
+      width: 100%;
+      height: 120px;
+      background: #0f3460;
+      border: none;
+      border-radius: 8px;
+      color: #aaa;
+      padding: 12px;
+      font-family: 'Monaco', 'Consolas', monospace;
+      font-size: 12px;
+      resize: vertical;
+    }
+
+    .section-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #e94560;
+      margin-top: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #0f3460;
+    }
+  </style>
+</head>
+<body>
+  <h1>Arrow SVG Designer</h1>
+
+  <div class="container">
+    <div class="controls">
+      <div class="section-title">Arrow Shape</div>
+
+      <div class="control-group">
+        <label>Length: <span id="lengthValue" class="value-display">200</span></label>
+        <input type="range" id="length" min="50" max="400" value="200">
+      </div>
+
+      <div class="control-group">
+        <label>Stroke Width: <span id="strokeWidthValue" class="value-display">4</span></label>
+        <input type="range" id="strokeWidth" min="1" max="20" value="4">
+      </div>
+
+      <div class="control-group">
+        <label>Head Size: <span id="headSizeValue" class="value-display">20</span></label>
+        <input type="range" id="headSize" min="5" max="50" value="20">
+      </div>
+
+      <div class="control-group">
+        <label>Head Angle: <span id="headAngleValue" class="value-display">30</span>&deg;</label>
+        <input type="range" id="headAngle" min="10" max="60" value="30">
+      </div>
+
+      <div class="section-title">Curve Settings</div>
+
+      <div class="control-group checkbox-group">
+        <input type="checkbox" id="curved">
+        <label for="curved">Curved Arrow</label>
+      </div>
+
+      <div class="control-group" id="curveAmountGroup" style="display: none;">
+        <label>Arc Angle: <span id="curveAmountValue" class="value-display">45</span>&deg;</label>
+        <input type="range" id="curveAmount" min="-180" max="180" value="45">
+      </div>
+
+      <div class="section-title">Arrow Heads</div>
+
+      <div class="control-group checkbox-group">
+        <input type="checkbox" id="doubleEnded">
+        <label for="doubleEnded">Double Ended</label>
+      </div>
+
+      <div class="control-group checkbox-group">
+        <input type="checkbox" id="filledHeads" checked>
+        <label for="filledHeads">Filled Arrow Heads</label>
+      </div>
+
+      <div class="section-title">Appearance</div>
+
+      <div class="control-group">
+        <label>Color</label>
+        <input type="color" id="color" value="#e94560">
+      </div>
+
+      <div class="control-group">
+        <label>Rotation: <span id="rotationValue" class="value-display">0</span>&deg;</label>
+        <input type="range" id="rotation" min="0" max="360" value="0">
+      </div>
+    </div>
+
+    <div class="preview-area">
+      <div class="preview-canvas">
+        <svg id="arrowSvg" viewBox="0 0 500 300" xmlns="http://www.w3.org/2000/svg">
+          <g id="arrowGroup"></g>
+        </svg>
+      </div>
+
+      <div class="buttons">
+        <button class="btn-primary" onclick="downloadSvg()">Download SVG</button>
+        <button class="btn-primary" onclick="copyImage()">Copy Image</button>
+        <button class="btn-secondary" onclick="copySvgCode()">Copy SVG Code</button>
+        <button class="btn-secondary" onclick="resetDefaults()">Reset</button>
+      </div>
+
+      <div class="svg-code">
+        <textarea id="svgCode" readonly></textarea>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const controls = {
+      length: document.getElementById('length'),
+      strokeWidth: document.getElementById('strokeWidth'),
+      headSize: document.getElementById('headSize'),
+      headAngle: document.getElementById('headAngle'),
+      curved: document.getElementById('curved'),
+      curveAmount: document.getElementById('curveAmount'),
+      doubleEnded: document.getElementById('doubleEnded'),
+      filledHeads: document.getElementById('filledHeads'),
+      color: document.getElementById('color'),
+      rotation: document.getElementById('rotation')
+    };
+
+    const valueDisplays = {
+      length: document.getElementById('lengthValue'),
+      strokeWidth: document.getElementById('strokeWidthValue'),
+      headSize: document.getElementById('headSizeValue'),
+      headAngle: document.getElementById('headAngleValue'),
+      curveAmount: document.getElementById('curveAmountValue'),
+      rotation: document.getElementById('rotationValue')
+    };
+
+    const curveAmountGroup = document.getElementById('curveAmountGroup');
+    const arrowGroup = document.getElementById('arrowGroup');
+    const svgCodeTextarea = document.getElementById('svgCode');
+
+    function getValues() {
+      return {
+        length: parseInt(controls.length.value),
+        strokeWidth: parseInt(controls.strokeWidth.value),
+        headSize: parseInt(controls.headSize.value),
+        headAngle: parseInt(controls.headAngle.value),
+        curved: controls.curved.checked,
+        curveAmount: parseInt(controls.curveAmount.value),
+        doubleEnded: controls.doubleEnded.checked,
+        filledHeads: controls.filledHeads.checked,
+        color: controls.color.value,
+        rotation: parseInt(controls.rotation.value)
+      };
+    }
+
+    function isColorLight(hex) {
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+      // Using relative luminance formula
+      const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+      return luminance > 0.6;
+    }
+
+    function updateCanvasBackground(color) {
+      const canvas = document.querySelector('.preview-canvas');
+      if (isColorLight(color)) {
+        canvas.style.background = '#1a1a2e';
+      } else {
+        canvas.style.background = '#fff';
+      }
+    }
+
+    function generateArrow() {
+      const v = getValues();
+      const centerX = 250;
+      const centerY = 150;
+      const halfLength = v.length / 2;
+
+      // Update canvas background based on color
+      updateCanvasBackground(v.color);
+
+      const headAngleRad = (v.headAngle * Math.PI) / 180;
+      // Calculate how far back the arrow head base is from the tip
+      const headBaseOffset = v.headSize * Math.cos(headAngleRad);
+
+      let startX, startY, endX, endY;
+      let pathD;
+      let endAngle = 0;
+      let startAngle = Math.PI;
+
+      // Points for where the line should end (at arrow head base)
+      let lineEndX, lineEndY, lineStartX, lineStartY;
+
+      if (v.curved && v.curveAmount !== 0) {
+        // Arc-based curve: the arrow follows a circular arc
+        // curveAmount is the arc angle in degrees
+        const arcAngle = (v.curveAmount * Math.PI) / 180;
+        const arcLength = v.length;
+
+        // Calculate radius from arc length and angle
+        // arcLength = radius * |angle|
+        const radius = arcLength / Math.abs(arcAngle);
+
+        // Determine arc direction (positive = curves up, negative = curves down)
+        const curveUp = v.curveAmount > 0;
+
+        // Position the arc center
+        // Arc spans from startAngle to endAngle on the circle
+        // We want the chord to be horizontal and centered
+        const halfArcAngle = Math.abs(arcAngle) / 2;
+
+        // Arc center position
+        const arcCenterX = centerX;
+        const arcCenterY = curveUp ? centerY + radius * Math.cos(halfArcAngle) : centerY - radius * Math.cos(halfArcAngle);
+
+        // Start and end points on the arc
+        if (curveUp) {
+          // Arc curves upward (center is below)
+          startX = arcCenterX - radius * Math.sin(halfArcAngle);
+          startY = arcCenterY - radius * Math.cos(halfArcAngle);
+          endX = arcCenterX + radius * Math.sin(halfArcAngle);
+          endY = arcCenterY - radius * Math.cos(halfArcAngle);
+
+          // Tangent angles: at start going up-right, at end going down-right
+          // End arrow points forward (in direction of travel): +halfArcAngle
+          // Start arrow points backward: π - halfArcAngle
+          endAngle = halfArcAngle;
+          startAngle = Math.PI - halfArcAngle;
+        } else {
+          // Arc curves downward (center is above)
+          startX = arcCenterX - radius * Math.sin(halfArcAngle);
+          startY = arcCenterY + radius * Math.cos(halfArcAngle);
+          endX = arcCenterX + radius * Math.sin(halfArcAngle);
+          endY = arcCenterY + radius * Math.cos(halfArcAngle);
+
+          // Tangent angles: at start going down-right, at end going up-right
+          // End arrow points forward: -halfArcAngle
+          // Start arrow points backward: π + halfArcAngle
+          endAngle = -halfArcAngle;
+          startAngle = Math.PI + halfArcAngle;
+        }
+
+        // SVG arc parameters
+        const largeArcFlag = Math.abs(arcAngle) > Math.PI ? 1 : 0;
+        const sweepFlag = curveUp ? 1 : 0;
+
+        // Shorten the arc so it ends at the arrowhead base, not the tip
+        // Calculate angular offset for the head base distance
+        const angularOffset = headBaseOffset / radius;
+        const shortenedHalfAngle = halfArcAngle - angularOffset;
+
+        if (curveUp) {
+          // Shortened end point (moved inward along the arc)
+          lineEndX = arcCenterX + radius * Math.sin(shortenedHalfAngle);
+          lineEndY = arcCenterY - radius * Math.cos(shortenedHalfAngle);
+
+          if (v.doubleEnded) {
+            // Also shorten start
+            lineStartX = arcCenterX - radius * Math.sin(shortenedHalfAngle);
+            lineStartY = arcCenterY - radius * Math.cos(shortenedHalfAngle);
+          } else {
+            lineStartX = startX;
+            lineStartY = startY;
+          }
+        } else {
+          // Shortened end point for curve down
+          lineEndX = arcCenterX + radius * Math.sin(shortenedHalfAngle);
+          lineEndY = arcCenterY + radius * Math.cos(shortenedHalfAngle);
+
+          if (v.doubleEnded) {
+            lineStartX = arcCenterX - radius * Math.sin(shortenedHalfAngle);
+            lineStartY = arcCenterY + radius * Math.cos(shortenedHalfAngle);
+          } else {
+            lineStartX = startX;
+            lineStartY = startY;
+          }
+        }
+
+        pathD = `M ${lineStartX} ${lineStartY} A ${radius} ${radius} 0 ${largeArcFlag} ${sweepFlag} ${lineEndX} ${lineEndY}`;
+      } else {
+        // Straight line
+        startX = centerX - halfLength;
+        endX = centerX + halfLength;
+        startY = centerY;
+        endY = centerY;
+
+        // Line endpoints shortened to arrow head bases
+        lineEndX = endX - headBaseOffset;
+        lineEndY = endY;
+        lineStartX = v.doubleEnded ? startX + headBaseOffset : startX;
+        lineStartY = startY;
+
+        pathD = `M ${lineStartX} ${lineStartY} L ${lineEndX} ${lineEndY}`;
+      }
+
+      function getArrowHeadPoints(tipX, tipY, angle, size) {
+        const x1 = tipX - size * Math.cos(angle - headAngleRad);
+        const y1 = tipY - size * Math.sin(angle - headAngleRad);
+        const x2 = tipX - size * Math.cos(angle + headAngleRad);
+        const y2 = tipY - size * Math.sin(angle + headAngleRad);
+        // Base center point (where the line should meet the arrowhead)
+        const baseX = tipX - headBaseOffset * Math.cos(angle);
+        const baseY = tipY - headBaseOffset * Math.sin(angle);
+        return { x1, y1, x2, y2, baseX, baseY };
+      }
+
+      // End arrow head (pointing right)
+      const endHead = getArrowHeadPoints(endX, endY, endAngle, v.headSize);
+
+      // Start arrow head (pointing left) - for double ended
+      const startHead = getArrowHeadPoints(startX, startY, startAngle, v.headSize);
+
+      let svgContent = '';
+
+      // Main line/curve
+      svgContent += `<path d="${pathD}" fill="none" stroke="${v.color}" stroke-width="${v.strokeWidth}" stroke-linecap="round"/>`;
+
+      // End arrow head - use 4-point polygon (kite shape) to fully cover line end
+      if (v.filledHeads) {
+        svgContent += `<polygon points="${endX},${endY} ${endHead.x1},${endHead.y1} ${endHead.baseX},${endHead.baseY} ${endHead.x2},${endHead.y2}" fill="${v.color}"/>`;
+      } else {
+        svgContent += `<polyline points="${endHead.x1},${endHead.y1} ${endX},${endY} ${endHead.x2},${endHead.y2}" fill="none" stroke="${v.color}" stroke-width="${v.strokeWidth}" stroke-linecap="round" stroke-linejoin="round"/>`;
+      }
+
+      // Start arrow head (if double ended)
+      if (v.doubleEnded) {
+        if (v.filledHeads) {
+          svgContent += `<polygon points="${startX},${startY} ${startHead.x1},${startHead.y1} ${startHead.baseX},${startHead.baseY} ${startHead.x2},${startHead.y2}" fill="${v.color}"/>`;
+        } else {
+          svgContent += `<polyline points="${startHead.x1},${startHead.y1} ${startX},${startY} ${startHead.x2},${startHead.y2}" fill="none" stroke="${v.color}" stroke-width="${v.strokeWidth}" stroke-linecap="round" stroke-linejoin="round"/>`;
+        }
+      }
+
+      // Apply rotation
+      arrowGroup.innerHTML = svgContent;
+      arrowGroup.setAttribute('transform', `rotate(${v.rotation} ${centerX} ${centerY})`);
+
+      // Update SVG code display
+      updateSvgCode();
+    }
+
+    function updateSvgCode() {
+      const svg = document.getElementById('arrowSvg');
+      const svgClone = svg.cloneNode(true);
+      svgClone.removeAttribute('id');
+
+      // Clean up the output
+      const code = svgClone.outerHTML
+        .replace(/\s+/g, ' ')
+        .replace(/> </g, '>\n<')
+        .trim();
+
+      svgCodeTextarea.value = code;
+    }
+
+    function downloadSvg() {
+      const svg = document.getElementById('arrowSvg');
+      const svgData = svg.outerHTML;
+      const blob = new Blob([svgData], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'arrow.svg';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    async function copyImage() {
+      const svg = document.getElementById('arrowSvg');
+      const arrowGroup = document.getElementById('arrowGroup');
+
+      // Get the bounding box of the arrow content
+      const bbox = arrowGroup.getBBox();
+      const padding = 10;
+      const scale = 4; // For higher resolution
+
+      // Create a new SVG with viewBox set to the arrow bounds
+      const croppedSvg = svg.cloneNode(true);
+      croppedSvg.setAttribute('viewBox', `${bbox.x - padding} ${bbox.y - padding} ${bbox.width + padding * 2} ${bbox.height + padding * 2}`);
+      croppedSvg.setAttribute('width', (bbox.width + padding * 2) * scale);
+      croppedSvg.setAttribute('height', (bbox.height + padding * 2) * scale);
+
+      const svgData = new XMLSerializer().serializeToString(croppedSvg);
+      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(svgBlob);
+
+      const img = new Image();
+      img.onload = async () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = (bbox.width + padding * 2) * scale;
+        canvas.height = (bbox.height + padding * 2) * scale;
+        const ctx = canvas.getContext('2d');
+
+        // Transparent background
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw the SVG
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url);
+
+        try {
+          canvas.toBlob(async (blob) => {
+            await navigator.clipboard.write([
+              new ClipboardItem({ 'image/png': blob })
+            ]);
+            const btn = document.querySelector('button[onclick="copyImage()"]');
+            const originalText = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(() => {
+              btn.textContent = originalText;
+            }, 1500);
+          }, 'image/png');
+        } catch (err) {
+          console.error('Failed to copy image:', err);
+          alert('Failed to copy image to clipboard');
+        }
+      };
+      img.src = url;
+    }
+
+    function copySvgCode() {
+      svgCodeTextarea.select();
+      navigator.clipboard.writeText(svgCodeTextarea.value).then(() => {
+        const btn = event.target;
+        const originalText = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => {
+          btn.textContent = originalText;
+        }, 1500);
+      });
+    }
+
+    function resetDefaults() {
+      controls.length.value = 200;
+      controls.strokeWidth.value = 4;
+      controls.headSize.value = 20;
+      controls.headAngle.value = 30;
+      controls.curved.checked = false;
+      controls.curveAmount.value = 45;
+      controls.doubleEnded.checked = false;
+      controls.filledHeads.checked = true;
+      controls.color.value = '#e94560';
+      controls.rotation.value = 0;
+
+      curveAmountGroup.style.display = 'none';
+      updateAllDisplays();
+      generateArrow();
+    }
+
+    function updateAllDisplays() {
+      valueDisplays.length.textContent = controls.length.value;
+      valueDisplays.strokeWidth.textContent = controls.strokeWidth.value;
+      valueDisplays.headSize.textContent = controls.headSize.value;
+      valueDisplays.headAngle.textContent = controls.headAngle.value;
+      valueDisplays.curveAmount.textContent = controls.curveAmount.value;
+      valueDisplays.rotation.textContent = controls.rotation.value;
+    }
+
+    // Event listeners for all controls
+    Object.keys(controls).forEach(key => {
+      controls[key].addEventListener('input', () => {
+        if (valueDisplays[key]) {
+          valueDisplays[key].textContent = controls[key].value;
+        }
+
+        if (key === 'curved') {
+          curveAmountGroup.style.display = controls.curved.checked ? 'flex' : 'none';
+        }
+
+        generateArrow();
+      });
+    });
+
+    // Initial render
+    generateArrow();
+  </script>
+</body>
+</html>

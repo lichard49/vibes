@@ -1080,6 +1080,12 @@
             peer.on('open', (id) => {
                 peerIdInput.value = id;
                 setStatus('Share your code or enter a friend\'s code to play!', 'info');
+
+                // Auto-join if code was pre-filled from URL parameter
+                const pendingCode = connectIdInput.value.trim();
+                if (pendingCode && pendingCode.length === 4) {
+                    connect();
+                }
             });
 
             peer.on('connection', (connection) => {
@@ -1599,8 +1605,9 @@
 
         // Event Listeners
         copyIdBtn.addEventListener('click', () => {
-            navigator.clipboard.writeText(peerIdInput.value);
-            copyIdBtn.textContent = 'Copied!';
+            const url = window.location.origin + window.location.pathname + '?code=' + peerIdInput.value;
+            navigator.clipboard.writeText(url);
+            copyIdBtn.textContent = 'Link Copied!';
             setTimeout(() => copyIdBtn.textContent = 'Copy', 2000);
         });
 
@@ -1651,6 +1658,14 @@
             connectBtn.disabled = false;
             setStatus('Share your code or enter a friend\'s code to play!', 'info');
         });
+
+        // Auto-join if ?code= parameter is present
+        const urlParams = new URLSearchParams(window.location.search);
+        const autoJoinCode = urlParams.get('code');
+        if (autoJoinCode && autoJoinCode.length === 4) {
+            history.replaceState(null, '', window.location.pathname);
+            connectIdInput.value = autoJoinCode.toUpperCase();
+        }
 
         // Initialize
         initPeer();

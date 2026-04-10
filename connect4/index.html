@@ -218,6 +218,10 @@
             letter-spacing: 4px;
             color: #4ecdc4;
             font-family: monospace;
+            cursor: pointer;
+        }
+        .room-code:hover {
+            text-decoration: underline;
         }
         .room-code-input {
             padding: 15px 20px;
@@ -346,7 +350,7 @@
         <div id="online-setup">
             <div id="host-setup">
                 <div class="room-code-display">
-                    <div class="room-code-label">Share this code with your opponent:</div>
+                    <div class="room-code-label">Share this code with your opponent (click to copy link):</div>
                     <div class="room-code" id="room-code">----</div>
                 </div>
             </div>
@@ -872,7 +876,26 @@
             }
         });
 
-        // Don't auto-start, show menu first
+        // Click room code to copy join link
+        document.getElementById('room-code').addEventListener('click', () => {
+            if (!roomCode) return;
+            const url = window.location.origin + window.location.pathname + '?code=' + roomCode;
+            navigator.clipboard.writeText(url);
+            const el = document.getElementById('room-code');
+            const original = el.textContent;
+            el.textContent = 'Link copied!';
+            setTimeout(() => el.textContent = original, 2000);
+        });
+
+        // Auto-join if ?code= parameter is present
+        const urlParams = new URLSearchParams(window.location.search);
+        const joinCode = urlParams.get('code');
+        if (joinCode && joinCode.length === 4) {
+            history.replaceState(null, '', window.location.pathname);
+            showJoinGame();
+            document.getElementById('join-code-input').value = joinCode.toUpperCase();
+            joinGame();
+        }
     </script>
 </body>
 </html>
